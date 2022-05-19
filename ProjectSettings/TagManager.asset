@@ -4,19 +4,19 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - DontDestroy
+  - Shootable
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - PostProcessing
+  - 
   - Water
   - UI
-  - BlinkingUI
   - 
   - 
-  - 
-  - 
+  - Lighting
+  - Ground
+  - Postprocessing
   - 
   - 
   - 
@@ -39,6 +39,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Fire
+    uniqueID: 3804908061
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0

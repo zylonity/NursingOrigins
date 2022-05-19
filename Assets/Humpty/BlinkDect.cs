@@ -16,7 +16,7 @@ namespace OpenCvSharp.Demo
         public static event Blinked onBlink;
 
 
-        bool manualBlink = false;
+        public bool manualBlink = false;
 
         public GameObject camHandle;
 

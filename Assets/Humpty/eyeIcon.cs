@@ -4,8 +4,7 @@ using UnityEngine;
 
 public class eyeIcon : MonoBehaviour
 {
-    public bool onObj = false;
-
+    public OpenCvSharp.Demo.IfBlinked blinkDealer;
 
     public LayerMask mask;
     public GameObject playerHead;
@@ -29,11 +28,11 @@ public class eyeIcon : MonoBehaviour
         {
             if (hit.transform.name == transform.name)
             {
-                onObj = true;
+                blinkDealer.lookingAtColl = true;
             }
             else
             {
-                onObj = false;
+                blinkDealer.lookingAtColl = false;
             }
         }
 

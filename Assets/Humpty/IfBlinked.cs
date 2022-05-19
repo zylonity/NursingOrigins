@@ -9,6 +9,9 @@ namespace OpenCvSharp.Demo
     public class IfBlinked : MonoBehaviour
     {
 
+        [HideInInspector]
+        public bool lookingAtColl = false;
+
         bool sceneReady = false;
 
         public AudioSource audioSource;
@@ -24,34 +27,29 @@ namespace OpenCvSharp.Demo
         public float Stage1Time;
         public float maxVigAndCaIncS1;
         public GameObject blinkCanvasS11;
+        public GameObject S1Army;
         [ColorUsageAttribute(false, true)]
         public Color colorShiftS1;
-        eyeIcon blinkIconS11;
 
-        [Space(3)]
+        [Space(10)]
         [Header(" --- Stage 2")]
         public GameObject Stage2;
-        public AudioClip audTwo;
         public float Stage2Time;
         public float maxVigAndCaIncS2;
         public GameObject blinkCanvasS21;
-        eyeIcon blinkIconS21;
-        [ColorUsageAttribute(false, true)]
-        public Color colorShiftS2;
         public CannonBall ballS21, ballS22, ballS23;
 
-        [Space(3)]        
+        [Space(10)]        
         [Header(" --- Stage 3")]
         public GameObject Stage3;
-        public AudioClip audThree;
+        public AudioClip audTwo;
         public float Stage3Time;
         public float maxVigAndCaIncS3;
         public GameObject blinkCanvasS31;
-        eyeIcon blinkIconS31;
         [ColorUsageAttribute(false, true)]
         public Color colorShiftS3;
 
-        [Space(3)]
+        [Space(10)]
         [Header(" --- Stage 4")]
         public GameObject Stage4;
         public AudioClip audFour;
@@ -74,10 +72,6 @@ namespace OpenCvSharp.Demo
             BlinkDect.onBlink += bBlinked;
 
             
-
-            blinkIconS11 = blinkCanvasS11.GetComponent<eyeIcon>();
-            blinkIconS21 = blinkCanvasS21.GetComponent<eyeIcon>();
-            blinkIconS31 = blinkCanvasS31.GetComponent<eyeIcon>();
             
             camVol.profile.TryGetSettings(out vig);
             camVol.profile.TryGetSettings(out cA);
@@ -123,30 +117,15 @@ namespace OpenCvSharp.Demo
 
                 if (counter < Stage2Time)
                 {
-
-                    if (tCounter > maxSlow)
-                        tCounter -= (counter / Stage1Time) / 100f;
-                    else
-                        tCounter = maxSlow;
-
-
-                    vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
-                    cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
-                    cG.colorFilter.Interp(ogCol, colorShiftS2, counter / Stage2Time);
-
-                    if (counter > Stage2Time / 2)
-                    {
-                        ballS21.Fire();
-                        ballS22.Fire();
-                        ballS23.Fire();
-                    }
+                    ballS21.Fire();
+                    ballS22.FireAndBreak();
+                    ballS23.FireAndBreak();
 
 
 
                 }
                 else
                 {
-                    tCounter = maxSlow;
                     blinkCanvasS21.SetActive(true);
                     sceneReady = true;
                 }
@@ -164,9 +143,9 @@ namespace OpenCvSharp.Demo
                         tCounter = maxSlow;
 
 
-                    vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
-                    cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
-                    cG.colorFilter.Interp(ogCol, colorShiftS2, counter / Stage2Time);
+                    vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS3, counter / Stage2Time);
+                    cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS3, counter / Stage2Time);
+                    cG.colorFilter.Interp(ogCol, colorShiftS3, counter / Stage2Time);
 
 
                 }
@@ -188,7 +167,7 @@ namespace OpenCvSharp.Demo
         void bBlinked()
         {
             
-            if (sceneReady && blinkIconS11.onObj ^ blinkIconS21.onObj ^ blinkIconS31.onObj)
+            if (sceneReady && lookingAtColl)
             {
                 if (stage == 1)
                     Stage1End();
@@ -205,14 +184,11 @@ namespace OpenCvSharp.Demo
         void Stage1End()
         {
             Stage1.SetActive(false);
+            lookingAtColl = false;
             Stage2.SetActive(true);
-            audioSource.clip = audTwo;
-            audioSource.Play();
             sceneReady = false;
             stage = 2;
             counter = 0;
-            tCounter = 0.9f;
-            maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
         }
@@ -220,8 +196,10 @@ namespace OpenCvSharp.Demo
         void Stage2End()
         {
             Stage2.SetActive(false);
+            lookingAtColl = false;
+            S1Army.SetActive(false);
             Stage3.SetActive(true);
-            audioSource.clip = audThree;
+            audioSource.clip = audTwo;
             audioSource.Play();
             sceneReady = false;
             stage = 3;
@@ -235,6 +213,7 @@ namespace OpenCvSharp.Demo
         void Stage3End()
         {
             Stage3.SetActive(false);
+            lookingAtColl = false;
             //Stage4.SetActive(true);
             audioSource.clip = audFour;
             audioSource.Play();

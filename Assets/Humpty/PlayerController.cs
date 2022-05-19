@@ -9,21 +9,27 @@ public class PlayerController : MonoBehaviour
 
     public float speed = 6.0f;
     public float mouseSens = 100f;
-    float rotationX = 0;
+
+    bool firstFrame = false;
+
     float mouseX = 0;
+    float mouseY = 0;
 
     Vector3 velocity;
-
     void Start()
     {
-        //maxY = player.position.y;
-        Cursor.lockState = CursorLockMode.Locked;
+        transform.localRotation = Quaternion.Euler(0, 0, 0);
     }
 
     void Update()
     {
-        mouseX += Input.GetAxis("Mouse X") * mouseSens * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSens * Time.deltaTime;
+
+        if (Input.mousePosition.x > 950f && Input.mousePosition.x < 960f)
+        {
+            mouseX += (Input.GetAxis("Mouse X") * Time.deltaTime) * mouseSens;
+            mouseY -= (Input.GetAxis("Mouse Y") * Time.deltaTime) * mouseSens;
+        }
+        
 
         float movementX = Input.GetAxis("Horizontal");
         float movementZ = Input.GetAxis("Vertical");
@@ -32,17 +38,20 @@ public class PlayerController : MonoBehaviour
 
         charPlayer.Move(toMove * speed * Time.deltaTime);
 
-        rotationX -= mouseY;
-        rotationX = Mathf.Clamp(rotationX, -90f, 90f);
+        mouseY = Mathf.Clamp(mouseY, -90f, 90f);
 
-
-
-
-        transform.localRotation = Quaternion.Euler(rotationX, mouseX, 0);
+        transform.localRotation = Quaternion.Euler(mouseY, mouseX, 0);
 
         velocity.y += -9.81f * Time.deltaTime;
 
         charPlayer.Move(velocity * Time.deltaTime);
+
+        if (firstFrame == false)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            firstFrame = true;
+        }
+
 
     }
 

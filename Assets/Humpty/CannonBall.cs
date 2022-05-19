@@ -6,7 +6,16 @@ public class CannonBall : MonoBehaviour
 {
     Rigidbody rb;
     bool fired = false;
-    public GameObject broken;
+    public GameObject goodCannon;
+    public GameObject brokenCannon;
+    public Transform explosionCentre;
+    public GameObject[] brokenCannonPieces;
+
+    public ParticleSystem explosion;
+
+    public float radius = 5.0f;
+    public float power = 1.01f;
+
 
     public void Fire()
     {
@@ -31,9 +40,24 @@ public class CannonBall : MonoBehaviour
             fired = true;
         }
 
-        transform.parent.gameObject.SetActive(false);
-        broken.SetActive(true);
+        goodCannon.SetActive(false);
+        brokenCannon.SetActive(true);
+
+        Vector3 explosionPos = explosionCentre.position;
+        Collider[] colliders = Physics.OverlapSphere(explosionPos, radius);
+        explosion.Play();
+        foreach (Collider hit in colliders)
+        {
+            Rigidbody rb = hit.GetComponent<Rigidbody>();
+
+            if (rb != null)
+                rb.AddExplosionForce(power, explosionPos, radius, 0.01f);
+        }
+
+
     }
+
+    
 
 
 }
