@@ -16,7 +16,7 @@ namespace OpenCvSharp.Demo
         public static event Blinked onBlink;
 
 
-        public bool manualBlink = true;
+        bool manualBlink = false;
 
         public GameObject camHandle;
 
@@ -36,6 +36,11 @@ namespace OpenCvSharp.Demo
             finalLeft = PlayerPrefs.GetFloat("FinalLeft");
             finalRight = PlayerPrefs.GetFloat("FinalRight");
             blinkDura = PlayerPrefs.GetFloat("BlinkDura");
+
+            if(PlayerPrefs.GetString("Mode") == "Manual")
+            {
+                manualBlink = true;
+            }
         }
 
         void Update()

@@ -28,23 +28,30 @@ namespace OpenCvSharp.Demo
         public Color colorShiftS1;
         eyeIcon blinkIconS11;
 
+        [Space(3)]
         [Header(" --- Stage 2")]
         public GameObject Stage2;
         public AudioClip audTwo;
         public float Stage2Time;
         public float maxVigAndCaIncS2;
+        public GameObject blinkCanvasS21;
+        eyeIcon blinkIconS21;
         [ColorUsageAttribute(false, true)]
         public Color colorShiftS2;
         public CannonBall ballS21, ballS22, ballS23;
 
+        [Space(3)]        
         [Header(" --- Stage 3")]
         public GameObject Stage3;
         public AudioClip audThree;
         public float Stage3Time;
         public float maxVigAndCaIncS3;
+        public GameObject blinkCanvasS31;
+        eyeIcon blinkIconS31;
         [ColorUsageAttribute(false, true)]
         public Color colorShiftS3;
 
+        [Space(3)]
         [Header(" --- Stage 4")]
         public GameObject Stage4;
         public AudioClip audFour;
@@ -69,6 +76,9 @@ namespace OpenCvSharp.Demo
             
 
             blinkIconS11 = blinkCanvasS11.GetComponent<eyeIcon>();
+            blinkIconS21 = blinkCanvasS21.GetComponent<eyeIcon>();
+            blinkIconS31 = blinkCanvasS31.GetComponent<eyeIcon>();
+            
             camVol.profile.TryGetSettings(out vig);
             camVol.profile.TryGetSettings(out cA);
             camVol.profile.TryGetSettings(out cG);
@@ -137,7 +147,7 @@ namespace OpenCvSharp.Demo
                 else
                 {
                     tCounter = maxSlow;
-                    blinkCanvasS11.SetActive(true);
+                    blinkCanvasS21.SetActive(true);
                     sceneReady = true;
                 }
             }
@@ -163,7 +173,7 @@ namespace OpenCvSharp.Demo
                 else
                 {
                     tCounter = maxSlow;
-                    blinkCanvasS11.SetActive(true);
+                    blinkCanvasS31.SetActive(true);
                     sceneReady = true;
                 }
             }
@@ -177,8 +187,8 @@ namespace OpenCvSharp.Demo
 
         void bBlinked()
         {
-
-            if (sceneReady) //&& blinkIconS11.onObj)
+            
+            if (sceneReady && blinkIconS11.onObj ^ blinkIconS21.onObj ^ blinkIconS31.onObj)
             {
                 if (stage == 1)
                     Stage1End();
