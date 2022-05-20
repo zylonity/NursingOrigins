@@ -24,12 +24,9 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 
-        if (Input.mousePosition.x > 950f && Input.mousePosition.x < 960f)
-        {
-            mouseX += (Input.GetAxis("Mouse X") * Time.deltaTime) * mouseSens;
-            mouseY -= (Input.GetAxis("Mouse Y") * Time.deltaTime) * mouseSens;
-        }
-        
+        mouseX += (Input.GetAxis("Mouse X") * Time.deltaTime) * mouseSens;
+        mouseY -= (Input.GetAxis("Mouse Y") * Time.deltaTime) * mouseSens;
+
 
         float movementX = Input.GetAxis("Horizontal");
         float movementZ = Input.GetAxis("Vertical");

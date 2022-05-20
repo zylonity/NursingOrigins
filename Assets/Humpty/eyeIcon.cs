@@ -6,6 +6,8 @@ public class eyeIcon : MonoBehaviour
 {
     public OpenCvSharp.Demo.IfBlinked blinkDealer;
 
+    public int endingNum = 0;
+
     public LayerMask mask;
     public GameObject playerHead;
     Camera cam;
@@ -29,10 +31,25 @@ public class eyeIcon : MonoBehaviour
             if (hit.transform.name == transform.name)
             {
                 blinkDealer.lookingAtColl = true;
+                
+                if (endingNum == 0)
+                    blinkDealer.lookingAtColl = true;
+                else if (endingNum == 1)
+                    blinkDealer.lookingAtEnding1 = true;
+                else if (endingNum == 2)
+                    blinkDealer.lookingAtEnding2 = true;
+
             }
             else
             {
                 blinkDealer.lookingAtColl = false;
+
+                if (endingNum == 0)
+                    blinkDealer.lookingAtColl = false;
+                else if (endingNum == 1)
+                    blinkDealer.lookingAtEnding1 = false;
+                else if (endingNum == 2)
+                    blinkDealer.lookingAtEnding2 = false;
             }
         }
 
