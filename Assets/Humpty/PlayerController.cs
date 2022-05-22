@@ -25,8 +25,8 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 
-        mouseX += (Input.GetAxis("Mouse X") * Time.deltaTime) * mouseSens;
-        mouseY -= (Input.GetAxis("Mouse Y") * Time.deltaTime) * mouseSens;
+        mouseX += (Input.GetAxis("Mouse X") * Time.unscaledDeltaTime) * mouseSens;
+        mouseY -= (Input.GetAxis("Mouse Y") * Time.unscaledDeltaTime) * mouseSens;
 
 
         float movementX = Input.GetAxis("Horizontal");
