@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
     public CharacterController charPlayer;
 
     public float speed = 6.0f;
-    public float mouseSens = 100f;
+    float mouseSens = 100f;
 
     bool firstFrame = false;
 
@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         transform.localRotation = Quaternion.Euler(0, 0, 0);
+        mouseSens = PlayerPrefs.GetFloat("MouseSens");
     }
 
     void Update()
