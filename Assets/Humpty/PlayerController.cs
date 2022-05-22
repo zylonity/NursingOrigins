@@ -20,14 +20,14 @@ public class PlayerController : MonoBehaviour
     {
         transform.localRotation = Quaternion.Euler(0, 0, 0);
         mouseSens = PlayerPrefs.GetFloat("MouseSens");
+
+
     }
 
     void Update()
     {
 
-        mouseX += (Input.GetAxis("Mouse X") * Time.unscaledDeltaTime) * mouseSens;
-        mouseY -= (Input.GetAxis("Mouse Y") * Time.unscaledDeltaTime) * mouseSens;
-
+        StartCoroutine(onMouse());
 
         float movementX = Input.GetAxis("Horizontal");
         float movementZ = Input.GetAxis("Vertical");
@@ -36,9 +36,6 @@ public class PlayerController : MonoBehaviour
 
         charPlayer.Move(toMove * speed * Time.deltaTime);
 
-        mouseY = Mathf.Clamp(mouseY, -90f, 90f);
-
-        transform.localRotation = Quaternion.Euler(mouseY, mouseX, 0);
 
         velocity.y += -9.81f * Time.deltaTime;
 
@@ -52,5 +49,18 @@ public class PlayerController : MonoBehaviour
 
 
     }
+
+    IEnumerator onMouse()
+    {
+        mouseX += (Input.GetAxis("Mouse X") * Time.unscaledDeltaTime) * mouseSens;
+        mouseY -= (Input.GetAxis("Mouse Y") * Time.unscaledDeltaTime) * mouseSens;
+
+        mouseY = Mathf.Clamp(mouseY, -90f, 90f);
+
+        transform.localRotation = Quaternion.Euler(mouseY, mouseX, 0);
+
+        yield return null;
+    }
+
 
 }
