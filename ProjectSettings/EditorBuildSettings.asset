@@ -9,9 +9,6 @@ EditorBuildSettings:
     path: Assets/Menu/Main Menu.unity
     guid: 09ccf45096adb64458acfebd9e7e53d4
   - enabled: 1
-    path: Assets/Face_Detector/4Calib.unity
-    guid: d7565b8c0217bab44a4a78d1698672d8
-  - enabled: 1
-    path: Assets/Humpty/Stage1.unity
-    guid: c99d6acbb83f06a41bf34d397ca0bd2c
+    path: Assets/Face_Detector/FaceDetectorScene.unity
+    guid: dc53129b9536b4047802944847361339
   m_configObjects: {}

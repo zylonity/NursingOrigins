@@ -9,14 +9,12 @@ public class MainMenu : MonoBehaviour
     public GameObject mainMenu;
     public GameObject settingsMenu;
     public GameObject creditsMenu;
-    public GameObject CamOrManual;
     public GameObject warningMenu;
 
     public void PlayGame()
     {
-        PlayerPrefs.DeleteAll();
         mainMenu.SetActive(false);
-        CamOrManual.SetActive(true);
+        warningMenu.SetActive(true);
     }
     
     public void Settings()
@@ -45,24 +43,5 @@ public class MainMenu : MonoBehaviour
         warningMenu.SetActive(false);
         mainMenu.SetActive(true);
     }
-
-    public void QuestionsBack()
-    {
-        CamOrManual.SetActive(false);
-        mainMenu.SetActive(true);
-    }
-
-    public void Webcam()
-    {
-        CamOrManual.SetActive(false);
-        warningMenu.SetActive(true);
-    }
-
-    public void Manual()
-    {
-        PlayerPrefs.SetString("Mode", "Manual");
-        SceneManager.LoadScene(2);
-    }
-
-
+    
 }

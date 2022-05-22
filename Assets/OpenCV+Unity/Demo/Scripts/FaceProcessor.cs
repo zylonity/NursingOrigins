@@ -78,6 +78,7 @@
         protected Double appliedFactor = 1.0;
 		protected bool cutFalsePositivesWithEyesSearch = false;
 
+
         /// <summary>
         /// Performance options
         /// </summary>
@@ -207,6 +208,7 @@
 
 
         public Rect[] eyes;
+        //public Rect eye;
         public int facesCount = 0;
         /// <summary>
         /// Detector
@@ -270,6 +272,7 @@
                         {
                             face = Faces[i];
                             face.SetRegion(faceRectScaled);
+
                         }
 
                         // shape
@@ -307,26 +310,86 @@
             foreach (DetectedFace face in Faces)
             {
                 // face rect
-                //Cv2.Rectangle((InputOutputArray)Image, face.Region, Scalar.FromRgb(255, 0, 0), 2);
+
+                Cv2.Rectangle((InputOutputArray)Image, face.Region, Scalar.FromRgb(255, 0, 0), 2);
+                
+                //Cv2.Rectangle((InputOutputArray)Image, eye, Scalar.FromRgb(255, 0, 0), 2);
+                //Cv2.Rectangle((InputOutputArray)Image, face.Elements[6].Region, Scalar.FromRgb(255, 0, 0), 2);
+
 
                 // convex hull
                 //Cv2.Polylines(Image, new IEnumerable<Point>[] { face.Info.ConvexHull }, true, Scalar.FromRgb(255, 0, 0), 2);
 
                 // render face triangulation (should we have one)
-                if (face.Info != null)
-                {
-                    foreach (DetectedFace.Triangle tr in face.Info.DelaunayTriangles)
-                        Cv2.Polylines(Image, new IEnumerable<Point>[] { tr.ToArray() }, true, Scalar.FromRgb(0, 0, 255), 1);
-                }
+                //if (face.Info != null)
+                //{
+                //    foreach (DetectedFace.Triangle tr in face.Info.DelaunayTriangles)
+                //        Cv2.Polylines(Image, new IEnumerable<Point>[] { tr.ToArray() }, true, Scalar.FromRgb(0, 0, 255), 1);
+                //}
 
                 // Sub-items
                 if (drawSubItems)
                 {
-                    List<string> closedItems = new List<string>(new string[] { "Nose", "Eye", "Lip" });
+                   // List<string> closedItems = new List<string>(new string[] { "Nose", "Eye", "Lip" });
                     foreach (DetectedObject sub in face.Elements)
+                    {
+
+                        //Cv2.Rectangle((InputOutputArray)Image, sub.Region, Scalar.FromRgb(255, 0, 0), 2);
+
                         if (sub.Marks != null)
-                            Cv2.Polylines(Image, new IEnumerable<Point>[] { sub.Marks }, closedItems.Contains(sub.Name), Scalar.FromRgb(0, 255, 0), 1);
-                    
+                        {
+                            //Cv2.Polylines(Image, new IEnumerable<Point>[] { sub.Marks }, closedItems.Contains(sub.Name), Scalar.FromRgb(0, 255, 0), 1);
+
+                            if (sub.Name == "Eye")
+                            {
+                                int leftX = sub.Marks[0].X;
+                                int rightX = sub.Marks[0].X;
+                                int lowY = sub.Marks[0].Y;
+                                int highY = sub.Marks[0].Y;
+                                foreach (Point mark in sub.Marks)
+                                {
+                                    if (mark.X < leftX)
+                                    {
+                                        leftX = mark.X;
+                                    }
+
+                                    if (mark.Y < lowY)
+                                    {
+                                        lowY = mark.Y;
+                                    }
+
+                                    if (mark.X > rightX)
+                                    {
+                                        rightX = mark.X;
+                                    }
+
+                                    if (mark.Y > highY)
+                                    {
+                                        highY = mark.Y;
+                                    }
+
+
+                                }
+
+                                int eyeWidth = rightX - leftX;
+                                int eyeHeight = highY - lowY;
+
+                                Rect eyeRect = new Rect(leftX, lowY, eyeWidth, eyeHeight);
+                                Mat croppedMat = new Mat(Image, eyeRect);
+
+                                //Visualise eyes
+                                //Cv2.Rectangle((InputOutputArray)Image, eyeRect, Scalar.FromRgb(255, 0, 0), 1);
+                                
+
+                            }
+
+
+
+                        }
+
+                    }
+
+
 
 
                 }

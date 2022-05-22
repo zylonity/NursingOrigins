@@ -9,7 +9,7 @@ namespace OpenCvSharp.Demo
     using System.Linq;
 
 
-    public class CalibrationV2 : MonoBehaviour
+    public class CalibrationV3 : MonoBehaviour
     {
         [SerializeField]
         public bool printLeftList, printRightList;
@@ -23,6 +23,9 @@ namespace OpenCvSharp.Demo
         List<float> tempRight = new List<float>();
         List<float> sortedLeftEye = new List<float>();
         List<float> sortedRightEye = new List<float>();
+
+        float[] calibratedLeftBlink = new float[11];
+        float[] calibratedRightBlink = new float[11];
 
         public Button startButt;
         public GameObject stage0, stage0h, stage1, stage2, stage2h, stage3, stage4;
@@ -50,9 +53,8 @@ namespace OpenCvSharp.Demo
         int sixBlinksIndex = -1;
         public GameObject[] greenLights;
 
-        public GameObject[] grayPointers, greenPointers;
 
-        
+
 
         void Update()
         {
@@ -100,17 +102,18 @@ namespace OpenCvSharp.Demo
 
             if (calibrationSet && faceDect.faceInCam())
             {
+
                 leftEyeVals.Add(currentLeftPos);
                 rightEyeVals.Add(currentRightPos);
-
-                if (leftEyeVals.Count == 5)
+                
+                if (leftEyeVals.Count == 9)
                     leftEyeVals.RemoveAt(0);
 
-                if (rightEyeVals.Count == 5)
+                if (rightEyeVals.Count == 9)
                     rightEyeVals.RemoveAt(0);
 
 
-
+                
                 currentLeftAvg = Queryable.Average(leftEyeVals.AsQueryable());
                 currentRightAvg = Queryable.Average(rightEyeVals.AsQueryable());
 
@@ -125,58 +128,103 @@ namespace OpenCvSharp.Demo
                 List<float> lowerHalfRightEye = LowerHalfOfList(sortedRightEye);
                 int maxRightHalf = lowerHalfRightEye.Count - 1;
 
-                //compares the current distance between the eyelids to the minimum distance before it's considered a blink
 
-                print(currentLeftAvg);
-                if (currentLeftAvg < sortedLeftEye[maxLeftHalf] + blinkSensitivity && currentRightAvg < sortedRightEye[maxRightHalf] + blinkSensitivity && blinked == false)
+                float[] lInitialBlink = new float[4];
+                float[] lAfterBlink = new float[4];
+                float[] rInitialBlink = new float[4];
+                float[] rAfterBlink = new float[4];
+
+
+                for (int j = 0; j < 4; j++)
                 {
-                    StartCoroutine(hasBlinked());
+                    lInitialBlink[j] = leftEyeVals[j];
+                    rInitialBlink[j] = rightEyeVals[j];
+
+                    lAfterBlink[j] = leftEyeVals[j + 4];
+                    rAfterBlink[j] = rightEyeVals[j + 4];
+                }
+
+                float lTopRange = lAfterBlink[3] - lAfterBlink[0];
+                float lBottomRange = lInitialBlink[0] - lInitialBlink[3];
+
+                float rTopRange = rAfterBlink[3] - rAfterBlink[0];
+                float rBottomRange = rInitialBlink[0] - rInitialBlink[3];
+
+                float lCalibTopR = (calibratedLeftBlink[8] - calibratedLeftBlink[5]) - blinkSensitivity;
+                float lCalibBottomR = (calibratedLeftBlink[0] - calibratedLeftBlink[3]) - blinkSensitivity;
+
+                float rCalibTopR = (calibratedRightBlink[8] - calibratedRightBlink[5]) - blinkSensitivity;
+                float rCalibBottomR = (calibratedRightBlink[0] - calibratedRightBlink[3]) - blinkSensitivity;
+
+
+
+                //print(leftEyeVals[4] + " " + sortedLeftEye[maxLeftHalf]);
+                //compares the current distance between the eyelids to the minimum distance before it's considered a blink
+                if (lBottomRange > lCalibBottomR && rBottomRange > rCalibBottomR&& blinked == false)
+                {
+
+                    print("Calibrated right bottom range: " + (rCalibBottomR) + " right bottom range: " + (rBottomRange ));
+                    print("right top range: " + rCalibTopR + " right bottom range: " + rTopRange);
+
+                    if (lTopRange > lCalibTopR  && rTopRange > rCalibTopR)
+                    {
+                        print("Calibrated right top range: " + (rCalibTopR) + " right top range: " + (rTopRange));
+                        StartCoroutine(hasBlinked());
+                    }
+                    
+
+                    //StartCoroutine(hasBlinked());
 
                 }
+                
             }
 
 
             //Calibration process
             if (startCalibBool)
             {
+                
+                counter += Time.deltaTime;
 
-
-
-                if (pointer < 6)
+                if (counter < time)
                 {
                     tempLeft.Add(currentLeftPos);
                     tempRight.Add(currentRightPos);
 
-                    grayPointers[pointer].SetActive(true);
-
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        greenPointers[pointer].SetActive(true);
-                        pointer += 1;
-                    }
+                    timerScroll.value = (counter / time) * 100;
 
 
-                    
+
                 }
                 else
                 {
+
+                    int indexOfLeftMin = tempLeft.IndexOf(tempLeft.Min());
+                    int indexOfRightMin = tempRight.IndexOf(tempRight.Min());
+
+
+                    //Gets one of the blinks from the calibration and sets it to an array (CAN IMPROVE AUTOMATIC ACCURACY IF I DETECT MORE THAN ONE)
+                    for (int k = 0; k < 9; k++)
+                    {
+                        calibratedLeftBlink[k] = tempLeft[indexOfLeftMin - (4 - k)];
+                        calibratedRightBlink[k] = tempRight[indexOfRightMin - (4 - k)];
+                    }
+                    
                     //Sorts the massive list by size
                     tempLeft.Sort(SortByBiggest);
                     tempRight.Sort(SortByBiggest);
                     //Sorts the sorted list from before by unique values
                     sortedLeftEye = tempLeft.Distinct().ToList();
                     sortedRightEye = tempRight.Distinct().ToList();
-                    
-                    
+
+
                     print("Timer over");
 
                     SortByMost(tempLeft, sortedLeftEye);
 
-
-
                     SecondPartCalib();
 
-                    print(calibrationSet);
+                    //print(calibrationSet);
                     startCalibBool = false;
                 }
 
@@ -186,12 +234,12 @@ namespace OpenCvSharp.Demo
                 //if (counter <= time)
                 //{
                 //    timerScroll.value = (counter / time) * 100;
-                        
+
                 //    if (faceDect.faceInCam())
                 //    {
 
 
-                        
+
                 //    }
                 //}
                 //else
@@ -215,12 +263,12 @@ namespace OpenCvSharp.Demo
 
         }
 
-        
+
 
 
         public void startCalibration()
         {
-            
+
             stage0h.SetActive(false);
             stage1.SetActive(true);
             print("Blink naturally for the next 5 seconds");
@@ -252,8 +300,8 @@ namespace OpenCvSharp.Demo
         List<float> LowerHalfOfList(List<float> list)
         {
             List<float> halfList = new List<float>();
-            
-            for(int i = 0; i < (list.Count / 2); i++)
+
+            for (int i = 0; i < (list.Count / 2); i++)
             {
                 halfList.Add(list[i]);
             }
@@ -280,12 +328,12 @@ namespace OpenCvSharp.Demo
         {
             Dictionary<float, int> ammountPerNumber = new Dictionary<float, int>();
 
-            foreach(float x in filteredList)
+            foreach (float x in filteredList)
             {
                 ammountPerNumber.Add(x, 0);
             }
 
-            foreach(float j in oldList)
+            foreach (float j in oldList)
             {
                 if (ammountPerNumber.ContainsKey(j))
                 {
@@ -293,27 +341,27 @@ namespace OpenCvSharp.Demo
                 }
             }
 
-            foreach(float x in ammountPerNumber.Keys)
+            foreach (float x in ammountPerNumber.Keys)
             {
-                print(x + "value is: " + ammountPerNumber[x]);
+                //print(x + "value is: " + ammountPerNumber[x]);
             }
 
         }
 
         public void tooLittleDetected()
         {
-            blinkSensitivity += 0.3f;
+            blinkSensitivity += 0.5f;
             sixBlinksIndex = -1;
-            stage3.SetActive(false);
-            stage4.SetActive(true);
+            //stage3.SetActive(false);
+            //stage4.SetActive(true);
         }
 
         public void tooManyDetected()
         {
-            blinkSensitivity -= 0.3f;
+            blinkSensitivity -= 0.5f;
             sixBlinksIndex = -1;
-            stage3.SetActive(false);
-            stage4.SetActive(true);
+            //stage3.SetActive(false);
+            //stage4.SetActive(true);
         }
 
         void SecondPartCalib()
@@ -351,7 +399,7 @@ namespace OpenCvSharp.Demo
             stage0.SetActive(false);
             stage0h.SetActive(true);
         }
-        
+
 
         //void WriteString(List<float> leftie, List<float> righty, int mode)
         //{

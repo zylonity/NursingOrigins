@@ -1,24 +1,18 @@
-namespace OpenCvSharp.Demo
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EyeProcessing : MonoBehaviour
 {
-    using System.Collections;
-    using System.Collections.Generic;
-    using UnityEngine;
-    using UnityEngine.UI;
-    using UnityEngine.SceneManagement;
-    using OpenCvSharp;
-    using System.IO;
-    using System.Linq;
-
-    public class EyeProcessing : MonoBehaviour
+    // Start is called before the first frame update
+    void Start()
     {
-        public FaceDetectorScene faceDect;
+        
+    }
 
-
-        void Update()
-        {
-            print(faceDect.EyeArea(6) + " " + faceDect.EyeArea(5));
-        }
+    // Update is called once per frame
+    void Update()
+    {
+        
     }
 }
-
-
