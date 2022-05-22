@@ -36,7 +36,7 @@
 		protected override void Awake()
 		{
 			base.Awake();
-			forceFrontalCamera = true;
+			//forceFrontalCamera = true;
 		}
 
 		/// <summary>
