@@ -43,7 +43,7 @@ public class PlayerController : MonoBehaviour
 
         if (firstFrame == false)
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            //Cursor.lockState = CursorLockMode.Locked;
             firstFrame = true;
         }
 
