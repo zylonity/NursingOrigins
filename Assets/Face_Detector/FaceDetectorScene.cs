@@ -133,7 +133,7 @@
 
 			processor.Performance.Downscale = (int)(croppedMat.Height * downScale);
 
-			Thread t = new Thread(processFace);
+			Thread t = new Thread(process);
 			t.Start();
 
 			processor.MarkDetected();
@@ -153,11 +153,12 @@
 			return false;
 		}
 
-		void processFace()
+		void process()
         {
 			// detect everything we're interested in
 			processor.ProcessTexture(croppedMat, true);
 
+			// mark detected objects
 
 		}
 
@@ -177,11 +178,11 @@
 
 
 				//left
-				float rightEyeClosedPoint1 = 0; //face.Elements[5].Marks[4].Y - face.Elements[5].Marks[2].Y;
-				float rightEyeClosedPoint2 = 0; //face.Elements[5].Marks[5].Y - face.Elements[5].Marks[1].Y;
-												//right eye
-				float leftEyeClosedPoint1 = 0; //face.Elements[6].Marks[4].Y - face.Elements[6].Marks[2].Y;
-				float leftEyeClosedPoint2 = 0; //face.Elements[6].Marks[5].Y - face.Elements[6].Marks[1].Y;
+				float rightEyeClosedPoint1 = face.Elements[5].Marks[4].Y - face.Elements[5].Marks[2].Y;
+				float rightEyeClosedPoint2 = face.Elements[5].Marks[5].Y - face.Elements[5].Marks[1].Y;
+				//right eye
+				float leftEyeClosedPoint1 = face.Elements[6].Marks[4].Y - face.Elements[6].Marks[2].Y;
+				float leftEyeClosedPoint2 = face.Elements[6].Marks[5].Y - face.Elements[6].Marks[1].Y;
 
 
 
