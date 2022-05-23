@@ -67,14 +67,14 @@
     /// <summary>
     /// High-level wrapper around OpenCV and DLib functionality that simplifies face detection tasks
     /// </summary>
-    class FaceProcessor<T>
-        where T: UnityEngine.Texture
+    class FaceProcessor<M>
+        where M: OpenCvSharp.Mat
     {
         protected CascadeClassifier cascadeFaces = null;
         protected CascadeClassifier cascadeEyes = null;
         protected ShapePredictor shapeFaces = null;
 
-        protected Mat processingImage = null;
+        //protected Mat processingImage = null;
         protected Double appliedFactor = 1.0;
 		protected bool cutFalsePositivesWithEyesSearch = false;
 
@@ -89,6 +89,7 @@
         /// </summary>
         public DataStabilizerParams DataStabilizer { get; private set; }
 
+        public DataStabilizerParams trackingDataStabilizer { get; private set; }
         /// <summary>
         /// Processed texture
         /// </summary>
@@ -106,6 +107,7 @@
         {
             Faces = new List<DetectedFace>();
             DataStabilizer = new DataStabilizerParams();
+            //trackingDataStabilizer = new DataStabilizerParams();
             Performance = new FaceProcessorPerformanceParams();
         }
 
@@ -143,68 +145,6 @@
             }
         }
 
-        /// <summary>
-        /// Creates OpenCV Mat from Unity texture
-        /// </summary>
-        /// <param name="texture">Texture instance, must be either Texture2D or WbCamTexture</param>
-        /// <returns>Newely created Mat object, ready to use with OpenCV</returns>
-        /// <param name="texParams">Texture parameters (flipped, rotated etc.)</param>
-        protected virtual Mat MatFromTexture(T texture, Unity.TextureConversionParams texParams)
-        {
-            if (texture is UnityEngine.Texture2D)
-                return Unity.TextureToMat(texture as UnityEngine.Texture2D, texParams);
-            else if (texture is UnityEngine.WebCamTexture)
-                return Unity.TextureToMat(texture as UnityEngine.WebCamTexture, texParams);
-            else
-                throw new Exception("FaceProcessor: incorrect input texture type, must be Texture2D or WebCamTexture");
-        }
-
-        /// <summary>
-        /// Imports Unity texture to the FaceProcessor, can pre-process object (white balance, resize etc.)
-        /// Fill few properties and fields: Image, downscaledImage, appliedScaleFactor
-        /// </summary>
-        /// <param name="texture">Input texture</param>
-        /// <param name="texParams">Texture parameters (flipped, rotated etc.)</param>
-        protected virtual void ImportTexture(T texture, Unity.TextureConversionParams texParams)
-        {
-            // free currently used textures
-            if (null != processingImage)
-                processingImage.Dispose();
-            if (null != Image)
-                Image.Dispose();
-
-            // convert and prepare
-            Image = MatFromTexture(texture, texParams);
-            if (Performance.Downscale > 0 && (Performance.Downscale < Image.Width || Performance.Downscale < Image.Height))
-            {
-                // compute aspect-respective scaling factor
-                int w = Image.Width;
-                int h = Image.Height;
-
-                // scale by max side
-                if (w >= h)
-                {
-                    appliedFactor = (double)Performance.Downscale / (double)w;
-                    w = Performance.Downscale;
-                    h = (int)(h * appliedFactor + 0.5);
-                }
-                else
-                {
-                    appliedFactor = (double)Performance.Downscale / (double)h;
-                    h = Performance.Downscale;
-                    w = (int)(w * appliedFactor + 0.5);
-                }
-
-                // resize
-                processingImage = new Mat();
-                Cv2.Resize(Image, processingImage, new Size(w, h));
-            }
-            else
-            {
-                appliedFactor = 1.0;
-                processingImage = Image;
-            }
-        }
 
 
         public Rect[] eyes;
@@ -216,11 +156,11 @@
         /// <param name="inputTexture">Input Unity texture</param>
         /// <param name="texParams">Texture parameters (flipped, rotated etc.)</param>
         /// <param name="detect">Flag signalling whether we need detection on this frame</param>
-        public virtual void ProcessTexture(T texture, Unity.TextureConversionParams texParams, bool detect = true)
+        public virtual void ProcessTexture(M matToProcess, bool detect = true)
         {
 
-            // convert Unity texture to OpenCv::Mat
-            ImportTexture(texture, texParams);
+            Image = matToProcess;
+
 
             // detect
             if (detect)
@@ -230,7 +170,7 @@
 
                 // convert to grayscale and normalize
                 Mat gray = new Mat();
-                Cv2.CvtColor(processingImage, gray, ColorConversionCodes.BGR2GRAY);
+                Cv2.CvtColor(Image, gray, ColorConversionCodes.BGR2GRAY);
 
                 // fix shadows
                 Cv2.EqualizeHist(gray, gray);
@@ -311,8 +251,11 @@
             {
                 // face rect
 
-                Cv2.Rectangle((InputOutputArray)Image, face.Region, Scalar.FromRgb(255, 0, 0), 2);
-                
+                //Cv2.Rectangle((InputOutputArray)Image, face.Region, Scalar.FromRgb(255, 0, 0), 2);
+
+
+
+
                 //Cv2.Rectangle((InputOutputArray)Image, eye, Scalar.FromRgb(255, 0, 0), 2);
                 //Cv2.Rectangle((InputOutputArray)Image, face.Elements[6].Region, Scalar.FromRgb(255, 0, 0), 2);
 
@@ -330,67 +273,12 @@
                 // Sub-items
                 if (drawSubItems)
                 {
-                   // List<string> closedItems = new List<string>(new string[] { "Nose", "Eye", "Lip" });
+                    List<string> closedItems = new List<string>(new string[] { "Nose", "Eye", "Lip" });
                     foreach (DetectedObject sub in face.Elements)
-                    {
-
-                        //Cv2.Rectangle((InputOutputArray)Image, sub.Region, Scalar.FromRgb(255, 0, 0), 2);
-
                         if (sub.Marks != null)
-                        {
-                            //Cv2.Polylines(Image, new IEnumerable<Point>[] { sub.Marks }, closedItems.Contains(sub.Name), Scalar.FromRgb(0, 255, 0), 1);
+                            Cv2.Polylines(Image, new IEnumerable<Point>[] { sub.Marks }, closedItems.Contains(sub.Name), Scalar.FromRgb(0, 255, 0), 1);
 
-                            if (sub.Name == "Eye")
-                            {
-                                int leftX = sub.Marks[0].X;
-                                int rightX = sub.Marks[0].X;
-                                int lowY = sub.Marks[0].Y;
-                                int highY = sub.Marks[0].Y;
-                                foreach (Point mark in sub.Marks)
-                                {
-                                    if (mark.X < leftX)
-                                    {
-                                        leftX = mark.X;
-                                    }
-
-                                    if (mark.Y < lowY)
-                                    {
-                                        lowY = mark.Y;
-                                    }
-
-                                    if (mark.X > rightX)
-                                    {
-                                        rightX = mark.X;
-                                    }
-
-                                    if (mark.Y > highY)
-                                    {
-                                        highY = mark.Y;
-                                    }
-
-
-                                }
-
-                                int eyeWidth = rightX - leftX;
-                                int eyeHeight = highY - lowY;
-
-                                Rect eyeRect = new Rect(leftX, lowY, eyeWidth, eyeHeight);
-                                Mat croppedMat = new Mat(Image, eyeRect);
-
-                                //Visualise eyes
-                                //Cv2.Rectangle((InputOutputArray)Image, eyeRect, Scalar.FromRgb(255, 0, 0), 1);
-                                
-
-                            }
-
-
-
-                        }
-
-                    }
-
-
-
+                    UnityEngine.Debug.Log(Image.Width + " " + Image.Height);
 
                 }
             }
@@ -400,8 +288,8 @@
     /// <summary>
     /// FaceProcessor subclass designed for live (web camera or stream) processing
     /// </summary>
-    class FaceProcessorLive<T> : FaceProcessor<T>
-        where T : UnityEngine.Texture
+    class FaceProcessorLive<M> : FaceProcessor<M>
+        where M : OpenCvSharp.Mat
     {
         private int frameCounter = 0;
 
@@ -418,10 +306,10 @@
         /// <param name="inputTexture">Input Unity texture</param>
         /// <param name="texParams">Texture parameters (flipped, rotated etc.)</param>
         /// <param name="detect">Flag signalling whether we need detection on this frame</param>
-        public override void ProcessTexture(T texture, Unity.TextureConversionParams texParams,  bool detect = true)
+        public override void ProcessTexture(M matToProcess, bool detect = true)
         {
             bool acceptedFrame = (0 == Performance.SkipRate || 0 == frameCounter++ % Performance.SkipRate);
-            base.ProcessTexture(texture, texParams, detect && acceptedFrame);
+            base.ProcessTexture(matToProcess, detect && acceptedFrame);
         }
     }
 }

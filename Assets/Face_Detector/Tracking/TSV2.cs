@@ -11,7 +11,7 @@
 	/// <summary>
 	/// Object tracking handler
 	/// </summary>
-	public class TrackingScript
+	public class TSV2
 		: WebCamera
 		, IBeginDragHandler
 		, IDragHandler

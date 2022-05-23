@@ -9,57 +9,24 @@ namespace OpenCvSharp.Demo
     {
 
         public FaceDetectorScene faceDect;
-        public int eyeNumber;
 
-        public RawImage rawimg;
-
-        Color boundary = new Color(79, 65, 75);
-        float diff = 30;
-
-        float[] lowerBound;
-        float[] upperBound;
-
-
-        void Start()
-        {
-            lowerBound = new float[] { boundary.b - diff, boundary.g - diff, boundary.r - diff };
-            upperBound = new float[] { boundary.b + diff, boundary.g + diff, boundary.r + diff };
-
-        }
+        public RawImage outputRawimg;
 
 
         void Update()
         {
-            Mat mat = new Mat();
-            faceDect.boxMat(eyeNumber).CopyTo(mat);
-            Mat processedMask = new Mat();
-            Mat finalMat = new Mat();
+            //Mat mat = new Mat();
+            //faceDect.boxMat().CopyTo(mat);
 
-            Texture2D output;
+            //outputRawimg.transform.transform.localPosition = faceDect.boxMat();
 
-            //Filters out anything not in the range by turning it into 1s and 0s
-            Cv2.InRange(mat, InputArray.Create(lowerBound), InputArray.Create(upperBound), processedMask);
+            //Texture2D output;
 
-            //Adds colour to the bit image thing I made
-            Cv2.BitwiseAnd(mat, mat, finalMat, processedMask);
+            //output = Unity.MatToTexture(faceDect.copyMat());
 
-            int picSize = mat.Size().Width * mat.Size().Height;
-            int pixelCount = Cv2.CountNonZero(processedMask);
-
-            float pixelPercentage = ((float)pixelCount / (float)picSize) * 100;
-
-            //print(pixelPercentage);
-            print(mat.Size().Width * mat.Size().Height);
+            //outputRawimg.texture = output;
 
 
-            //output
-            output = Unity.MatToTexture(processedMask);
-
-            rawimg.texture = output;
-            //RawImage rawImage = gameObject.GetComponent<RawImage>();
-            //rawImage.texture = texture;
-            //		Renderer renderer = gameObject.GetComponent<Renderer> ();
-            //		renderer.material.mainTexture = texture;
         }
 
 

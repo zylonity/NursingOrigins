@@ -5,6 +5,8 @@
 	using System.Collections.Generic;
 	using UnityEngine.UI;
 	using OpenCvSharp;
+	using OpenCvSharp.Tracking;
+	using System.Threading;
 
 	public class FaceDetectorScene : WebCamera
 	{
@@ -14,9 +16,22 @@
 		public TextAsset eyes;
 		public TextAsset shapes;
 
-		private FaceProcessorLive<WebCamTexture> processor;
+		private FaceProcessorLive<Mat> processor;
+
+		Mat mat;
+		public Mat croppedMat;
+
+		// downscaling const
+		const float downScale = 0.15f;
+		const float minimumAreaDiagonal = 25.0f;
 
 
+
+		public bool readyToTrack;
+
+		// tracker
+		Size frameSize = Size.Zero;
+		Tracker tracker = null;
 
 
 		/// <summary>
@@ -29,16 +44,16 @@
 
 			byte[] shapeDat = shapes.bytes;
 
-			processor = new FaceProcessorLive<WebCamTexture>();
+			processor = new FaceProcessorLive<Mat>();
 			processor.Initialize(faces.text, eyes.text, shapes.bytes);
 
 			// data stabilizer - affects face rects, face landmarks etc.
 			processor.DataStabilizer.Enabled = false;        // enable stabilizer
-			processor.DataStabilizer.Threshold = 2.0;       // threshold value in pixels
+			processor.DataStabilizer.Threshold = 1;       // threshold value in pixels
 			processor.DataStabilizer.SamplesCount = 2;      // how many samples do we need to compute stable data
 
 			// performance data - some tricks to make it work faster
-			processor.Performance.Downscale = 852;          // processed image is pre-scaled down to N px by long side
+			//processor.Performance.Downscale = 256;          // processed image is pre-scaled down to N px by long side
 			processor.Performance.SkipRate = 0;             // we actually process only each Nth frame (and every frame for skipRate = 0)
 
 
@@ -47,22 +62,85 @@
 
 		}
 
+
 		/// <summary>
 		/// Per-frame video capture processor
 		/// </summary>
 		protected override bool ProcessTexture(WebCamTexture input, ref Texture2D output)
 		{
+			mat = Unity.TextureToMat(input);
+
+			int firstFaceX = (int)(mat.Width * 0.38f);
+			int firstFaceY = (int)(mat.Height * 0.2f);
+			int lengthFaceX = (int)(mat.Width * 0.62f) - firstFaceX;
+			int lengthFaceY = (int)(mat.Height * 0.70f) - firstFaceY;
 
 
-            // detect everything we're interested in
-            processor.ProcessTexture(input, TextureParameters);
+			OpenCvSharp.Rect areaRect = new OpenCvSharp.Rect(firstFaceX, firstFaceY, lengthFaceX, lengthFaceY);
 
-			// mark detected objects
-			processor.MarkDetected();
+			areaRect = areaRect * downScale;
+
+			Cv2.Rectangle((InputOutputArray)mat, areaRect * (1.0 / downScale), Scalar.FromRgb(255, 255, 0), 3);
+
+			
+
+
 
 			// processor.Image now holds data we'd like to visualize
-			output = Unity.MatToTexture(processor.Image, output);   // if output is valid texture it's buffer will be re-used, otherwise it will be re-created
+			Mat downscaled = mat.Resize(Size.Zero, downScale, downScale);
 
+			//Cv2.Rectangle((InputOutputArray)mat, areaRect, Scalar.FromRgb(255, 255, 0), 3);
+			Rect2d obj = Rect2d.Empty;
+
+			// If not dragged - show the tracking data
+			if (readyToTrack)
+			{
+
+				// we have to tracker - let's initialize one
+				if (null == tracker)
+				{
+					obj = new Rect2d(areaRect.X, areaRect.Y, areaRect.Width, areaRect.Height);
+
+					// initial tracker with current image and the given rect, one can play with tracker types here
+					tracker = Tracker.Create(TrackerTypes.KCF);
+					tracker.Init(downscaled, obj);
+
+					frameSize = downscaled.Size();
+				}
+				// if we already have an active tracker - just to to update with the new frame and check whether it still tracks object
+				else
+				{
+					if (!tracker.Update(downscaled, ref obj))
+						obj = Rect2d.Empty;
+				}
+
+				// save tracked object location
+				if (0 != obj.Width && 0 != obj.Height)
+					areaRect = new OpenCvSharp.Rect((int)obj.X, (int)obj.Y, (int)obj.Width, (int)obj.Height);
+			}
+			else
+			{
+				DropTracking();
+			}
+
+			// render rect we've tracker or one is being drawn by the user
+			if (null != tracker && obj.Width != 0)
+				Cv2.Rectangle((InputOutputArray)mat, areaRect * (1.0 / downScale), Scalar.FromRgb(255, 255, 0), 3);
+			//Cv2.Rectangle((InputOutputArray)image, areaRect * (1.0 / downScale), isDragging? Scalar.Red : Scalar.LightGreen);
+
+
+			croppedMat = new Mat(mat, areaRect * (1.0 / downScale));
+
+			processor.Performance.Downscale = (int)(croppedMat.Height * downScale);
+
+			Thread t = new Thread(processFace);
+			t.Start();
+
+			processor.MarkDetected();
+
+			// result, passing output texture as parameter allows to re-use it's buffer
+			// should output texture be null a new texture will be created
+			output = Unity.MatToTexture(mat, output);
 			return true;
 		}
 
@@ -75,62 +153,13 @@
 			return false;
 		}
 
-
-		public Mat boxMat(int partID)
+		void processFace()
         {
-			//5 and 6 for eyes/partIDs
-			if (processor.Faces.Count >= 1)
-			{
-				DetectedFace face = processor.Faces[0];
+			// detect everything we're interested in
+			processor.ProcessTexture(croppedMat, true);
 
-				int lLeftX = face.Elements[partID].Marks[0].X;
-				int lRightX = face.Elements[partID].Marks[0].X;
-				int lLowY = face.Elements[partID].Marks[0].Y;
-				int lHighY = face.Elements[partID].Marks[0].Y;
 
-				foreach (Point mark in face.Elements[partID].Marks)
-				{
-
-					if (mark.X < lLeftX)
-					{
-						lLeftX = mark.X;
-					}
-
-					if (mark.Y < lLowY)
-					{
-						lLowY = mark.Y;
-					}
-
-					if (mark.X > lRightX)
-					{
-						lRightX = mark.X;
-					}
-
-					if (mark.Y > lHighY)
-					{
-						lHighY = mark.Y;
-					}
-
-				}
-
-				int eyeWidth = lRightX - lLeftX;
-				int eyeHeight = lHighY - lLowY;
-
-				OpenCvSharp.Rect eyeRect = new OpenCvSharp.Rect(lLeftX, lLowY, eyeWidth, eyeHeight);
-				Mat refMat = new Mat(processor.Image, eyeRect);
-
-				Mat croppedMat = new Mat();
-				refMat.CopyTo(croppedMat);
-
-				return croppedMat;
-			}
-			else
-			{
-				return null;
-
-			}
 		}
-
 
 		public Tuple<float, float> FaceDetected()
 		{
@@ -148,11 +177,11 @@
 
 
 				//left
-				float rightEyeClosedPoint1 = face.Elements[5].Marks[4].Y - face.Elements[5].Marks[2].Y;
-				float rightEyeClosedPoint2 = face.Elements[5].Marks[5].Y - face.Elements[5].Marks[1].Y;
-				//right eye
-				float leftEyeClosedPoint1 = face.Elements[6].Marks[4].Y - face.Elements[6].Marks[2].Y;
-				float leftEyeClosedPoint2 = face.Elements[6].Marks[5].Y - face.Elements[6].Marks[1].Y;
+				float rightEyeClosedPoint1 = 0; //face.Elements[5].Marks[4].Y - face.Elements[5].Marks[2].Y;
+				float rightEyeClosedPoint2 = 0; //face.Elements[5].Marks[5].Y - face.Elements[5].Marks[1].Y;
+												//right eye
+				float leftEyeClosedPoint1 = 0; //face.Elements[6].Marks[4].Y - face.Elements[6].Marks[2].Y;
+				float leftEyeClosedPoint2 = 0; //face.Elements[6].Marks[5].Y - face.Elements[6].Marks[1].Y;
 
 
 
@@ -208,6 +237,16 @@
 
 		}
 
+		protected void DropTracking()
+		{
+			if (null != tracker)
+			{
+				tracker.Dispose();
+				tracker = null;
+
+				//startPoint = endPoint = Vector2.zero;
+			}
+		}
 
 
 

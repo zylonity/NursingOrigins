@@ -4,6 +4,7 @@ namespace OpenCvSharp.Demo
 	using UnityEngine;
 	using UnityEngine.UI;
 	using OpenCvSharp;
+	using System.Threading;
 
 	// Many ideas are taken from http://answers.unity3d.com/questions/773464/webcamtexture-correct-resolution-and-ratio.html#answer-1155328
 
@@ -14,6 +15,9 @@ namespace OpenCvSharp.Demo
 	/// </summary>
 	public abstract class WebCamera: MonoBehaviour
 	{
+
+
+
 		/// <summary>
 		/// Target surface to render WebCam stream
 		/// </summary>
@@ -134,7 +138,7 @@ namespace OpenCvSharp.Demo
 		/// <summary>
 		/// Updates web camera texture
 		/// </summary>
-		private void Update ()
+		private void Update()
 		{
 			if (webCamTexture != null && webCamTexture.didUpdateThisFrame)
 			{
@@ -147,6 +151,12 @@ namespace OpenCvSharp.Demo
 					RenderFrame();
 				}
 			}
+		}
+
+
+		void updatee()
+        {
+			
 		}
 
 		/// <summary>
@@ -163,14 +173,11 @@ namespace OpenCvSharp.Demo
 		/// </summary>
 		private void RenderFrame()
 		{
-			if (renderedTexture != null)
-			{
-				// apply
-				Surface.GetComponent<RawImage>().texture = renderedTexture;
+			// apply
+			Surface.GetComponent<RawImage>().texture = renderedTexture;
 
-				// Adjust image ration according to the texture sizes 
-				Surface.GetComponent<RectTransform>().sizeDelta = new Vector2(renderedTexture.width, renderedTexture.height);
-			}
+			// Adjust image ration according to the texture sizes 
+			Surface.GetComponent<RectTransform>().sizeDelta = new Vector2(renderedTexture.width, renderedTexture.height);
 		}
 	}
 }
