@@ -13,8 +13,12 @@ namespace OpenCvSharp.Demo
         public bool lookingAtColl = false;
 
         [HideInInspector]
-        public bool lookingAtEnding1 = false;
-        public bool lookingAtEnding2 = false;
+        public bool lookingAtEnding1, lookingAtEnding2 = false;
+
+        public GameObject webcamHandler;
+
+        public PlayerController pControl;
+        float mouseSens;
 
         bool sceneReady = false;
 
@@ -99,6 +103,7 @@ namespace OpenCvSharp.Demo
 
         private void Start()
         {
+            mouseSens = pControl.mouseSens;
             stage = 1;
         }
 
@@ -113,9 +118,15 @@ namespace OpenCvSharp.Demo
                 {
 
                     if (tCounter > maxSlow)
+                    {
                         tCounter -= (counter / Stage1Time) / 100f;
+                        pControl.mouseSens -= (mouseSens/ Stage1Time) / 100f;
+                    }
                     else
                         tCounter = maxSlow;
+
+
+
 
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS1, counter / Stage1Time);
@@ -128,6 +139,7 @@ namespace OpenCvSharp.Demo
                 {
                     tCounter = maxSlow;
                     blinkCanvasS11.SetActive(true);
+                    webcamHandler.SetActive(true);
                     sceneReady = true;
                 }
             }
@@ -143,10 +155,14 @@ namespace OpenCvSharp.Demo
                     ballS23.FireAndBreak();
 
                     if (tCounter > maxSlow)
+                    {
                         tCounter -= (counter / Stage2Time) / 100f;
+                        pControl.mouseSens -= (mouseSens / Stage2Time) / 100f;
+                    }
                     else
                         tCounter = maxSlow;
 
+                    pControl.mouseSens = mouseSens * (1 - (counter / Stage1Time));
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
@@ -156,6 +172,7 @@ namespace OpenCvSharp.Demo
                 else
                 {
                     blinkCanvasS21.SetActive(true);
+                    webcamHandler.SetActive(true);
                     sceneReady = true;
                 }
             }
@@ -167,10 +184,14 @@ namespace OpenCvSharp.Demo
                 {
 
                     if (tCounter > maxSlow)
-                        tCounter -= (counter / Stage1Time) / 100f;
+                    {
+                        tCounter -= (counter / Stage3Time) / 100f;
+                        pControl.mouseSens -= (mouseSens / Stage3Time) / 100f;
+                    }
                     else
                         tCounter = maxSlow;
 
+                    pControl.mouseSens = mouseSens * (1 - (counter / Stage1Time));
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS3, counter / Stage3Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS3, counter / Stage3Time);
@@ -182,6 +203,7 @@ namespace OpenCvSharp.Demo
                 {
                     tCounter = maxSlow;
                     blinkCanvasS31.SetActive(true);
+                    webcamHandler.SetActive(true);
                     //blinkCanvasS32.SetActive(true);
                     sceneReady = true;
                 }
@@ -194,10 +216,14 @@ namespace OpenCvSharp.Demo
                 {
 
                     if (tCounter > maxSlow)
-                        tCounter -= (counter / Stage1Time) / 100f;
+                    {
+                        tCounter -= (counter / Stage4Time) / 100f;
+                        pControl.mouseSens -= (mouseSens / Stage4Time) / 100f;
+                    }
                     else
                         tCounter = maxSlow;
 
+                    pControl.mouseSens = mouseSens * (1 - (counter / Stage1Time));
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS4, counter / Stage4Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS4, counter / Stage4Time);
@@ -265,6 +291,7 @@ namespace OpenCvSharp.Demo
         void Stage1End()
         {
             Stage1.SetActive(false);
+            webcamHandler.SetActive(false);
             lookingAtColl = false;
             Stage2.SetActive(true);
             audioSource.clip = audTwo;
@@ -279,6 +306,7 @@ namespace OpenCvSharp.Demo
         void Stage2End()
         {
             Stage2.SetActive(false);
+            webcamHandler.SetActive(false);
             lookingAtColl = false;
             Stage3.SetActive(true);
             audioSource.clip = audThree;
@@ -295,6 +323,7 @@ namespace OpenCvSharp.Demo
         void Stage3End()
         {
             Stage3.SetActive(false);
+            webcamHandler.SetActive(false);
             lookingAtColl = false;
             Stage4.SetActive(true);
             audioSource.clip = audFour;
@@ -311,6 +340,7 @@ namespace OpenCvSharp.Demo
         void Stage4End()
         {
             Stage4.SetActive(false);
+            webcamHandler.SetActive(false);
             lookingAtColl = false;
             Stage5.SetActive(true);
             audioSource.clip = audFour;

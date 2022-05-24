@@ -27,7 +27,7 @@ public class PickCamera : MonoBehaviour
 
     }
 
-    void Update()
+    public void valueChanged()
     {
         PlayerPrefs.SetString("Camera", deviceNames[webcamDropdown.value]);
     }

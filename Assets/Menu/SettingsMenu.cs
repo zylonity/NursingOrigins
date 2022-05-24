@@ -10,12 +10,7 @@ public class SettingsMenu : MonoBehaviour
     public GameObject mainMenu;
     public GameObject warningMenu;
     public GameObject credits;
-    public Slider mouseSens;
-
-    private void Update()
-    {
-        PlayerPrefs.SetFloat("MouseSens", mouseSens.value);
-    }
+    public GameObject accesibility;
 
 
     public void Back()
@@ -29,4 +24,11 @@ public class SettingsMenu : MonoBehaviour
         settingsMenu.SetActive(false);
         warningMenu.SetActive(true);
     }
+
+    public void accesibilityMenu()
+    {
+        settingsMenu.SetActive(false);
+        accesibility.SetActive(true);
+    }
+
 }

@@ -3,12 +3,13 @@
 	using System;
 	using System.Collections.Generic;
 	using OpenCvSharp;
+    using System.Threading;
 
-	/// <summary>
-	/// Array utilities
-	/// http://stackoverflow.com/questions/1792470/subset-of-array-in-c-sharp
-	/// </summary>
-	static partial class ArrayUtilities
+    /// <summary>
+    /// Array utilities
+    /// http://stackoverflow.com/questions/1792470/subset-of-array-in-c-sharp
+    /// </summary>
+    static partial class ArrayUtilities
     {
         // create a subset from a range of indices
         public static T[] RangeSubset<T>(this T[] array, int startIndex, int length)
@@ -223,80 +224,90 @@
             // detect
             if (detect)
             {
-                double invF = 1.0 / appliedFactor;
-                DataStabilizer.ThresholdFactor = invF;
+                Thread t = new Thread(ProcessSide);
+                
+                t.Start();
 
-                // convert to grayscale and normalize
-                Mat gray = new Mat();
-                Cv2.CvtColor(processingImage, gray, ColorConversionCodes.BGR2GRAY);
+                //();
+            }
+        }
 
-                // fix shadows
-                Cv2.EqualizeHist(gray, gray);
+        void ProcessSide()
+        {
+            double invF = 1.0 / appliedFactor;
+            DataStabilizer.ThresholdFactor = invF;
 
-                /*Mat normalized = new Mat();
-                CLAHE clahe = CLAHE.Create();
-                clahe.TilesGridSize = new Size(8, 8);
-                clahe.Apply(gray, normalized);
-                gray = normalized;*/
+            // convert to grayscale and normalize
+            Mat gray = new Mat();
+            Cv2.CvtColor(processingImage, gray, ColorConversionCodes.BGR2GRAY);
 
-                // detect matching regions (faces bounding)
-                Rect[] rawFaces = cascadeFaces.DetectMultiScale(gray, 1.2, 6);
-				if (Faces.Count != rawFaces.Length)
-					Faces.Clear();
+            // fix shadows
+            Cv2.EqualizeHist(gray, gray);
 
-                // now per each detected face draw a marker and detect eyes inside the face rect
-                for (int i = 0; i < rawFaces.Length; ++i)
+            /*Mat normalized = new Mat();
+            CLAHE clahe = CLAHE.Create();
+            clahe.TilesGridSize = new Size(8, 8);
+            clahe.Apply(gray, normalized);
+            gray = normalized;*/
+
+            // detect matching regions (faces bounding)
+            Rect[] rawFaces = cascadeFaces.DetectMultiScale(gray, 1.2, 6);
+            if (Faces.Count != rawFaces.Length)
+                Faces.Clear();
+
+            // now per each detected face draw a marker and detect eyes inside the face rect
+            for (int i = 0; i < rawFaces.Length; ++i)
+            {
+                Rect faceRect = rawFaces[i];
+                Rect faceRectScaled = faceRect * invF;
+                using (Mat grayFace = new Mat(gray, faceRect))
                 {
-                    Rect faceRect = rawFaces[i];
-                    Rect faceRectScaled = faceRect * invF;
-                    using (Mat grayFace = new Mat(gray, faceRect))
+                    // another trick: confirm the face with eye detector, will cut some false positives
+                    if (cutFalsePositivesWithEyesSearch && null != cascadeEyes)
                     {
-                        // another trick: confirm the face with eye detector, will cut some false positives
-                        if (cutFalsePositivesWithEyesSearch && null != cascadeEyes)
-                        {
-                            eyes = cascadeEyes.DetectMultiScale(grayFace);
-                            if (eyes.Length == 0 || eyes.Length > 2)
-                                continue;
-                        }
+                        eyes = cascadeEyes.DetectMultiScale(grayFace);
+                        if (eyes.Length == 0 || eyes.Length > 2)
+                            continue;
+                    }
 
-                        // get face object
-                        DetectedFace face = null;
-                        if (Faces.Count < i + 1)
-                        {
-                            face = new DetectedFace(DataStabilizer, faceRectScaled);
-                            Faces.Add(face);
-                        }
-                        else
-                        {
-                            face = Faces[i];
-                            face.SetRegion(faceRectScaled);
-                        }
+                    // get face object
+                    DetectedFace face = null;
+                    if (Faces.Count < i + 1)
+                    {
+                        face = new DetectedFace(DataStabilizer, faceRectScaled);
+                        Faces.Add(face);
+                    }
+                    else
+                    {
+                        face = Faces[i];
+                        face.SetRegion(faceRectScaled);
+                    }
 
-                        // shape
-                        facesCount++;
-                        if (null != shapeFaces)
+                    // shape
+                    facesCount++;
+                    if (null != shapeFaces)
+                    {
+                        Point[] marks = shapeFaces.DetectLandmarks(gray, faceRect);
+
+                        // we have 68-point predictor
+                        if (marks.Length == 68)
                         {
-                            Point[] marks = shapeFaces.DetectLandmarks(gray, faceRect);
+                            // transform landmarks to the original image space
+                            List<Point> converted = new List<Point>();
+                            foreach (Point pt in marks)
+                                converted.Add(pt * invF);
 
-                            // we have 68-point predictor
-                            if (marks.Length == 68)
-                            {
-                                // transform landmarks to the original image space
-                                List<Point> converted = new List<Point>();
-                                foreach (Point pt in marks)
-                                    converted.Add(pt * invF);
-
-                                // save and parse landmarks
-                                face.SetLandmarks(converted.ToArray());
-                            }
+                            // save and parse landmarks
+                            face.SetLandmarks(converted.ToArray());
                         }
                     }
                 }
-
-                // log
-                //UnityEngine.Debug.Log(String.Format("Found {0} faces", Faces.Count));
             }
+
+            // log
+            //UnityEngine.Debug.Log(String.Format("Found {0} faces", Faces.Count));
         }
+
 
         /// <summary>
         /// Marks detected objects on the texture

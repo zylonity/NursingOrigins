@@ -8,6 +8,7 @@ namespace OpenCvSharp.Demo
     using OpenCvSharp;
     using System.IO;
     using System.Linq;
+    using System.Threading;
 
     public class BlinkDect : MonoBehaviour
     {
@@ -16,7 +17,7 @@ namespace OpenCvSharp.Demo
         public static event Blinked onBlink;
 
 
-        public bool manualBlink = false;
+        bool manualBlink = false;
 
         public GameObject camHandle;
 
@@ -28,6 +29,7 @@ namespace OpenCvSharp.Demo
         float finalLeft, finalRight;
         float blinkDura;
 
+        int eyeNum;
 
 
 
@@ -37,10 +39,20 @@ namespace OpenCvSharp.Demo
             finalRight = PlayerPrefs.GetFloat("FinalRight");
             blinkDura = PlayerPrefs.GetFloat("BlinkDura");
 
-            if(PlayerPrefs.GetString("Mode") == "Manual")
-            {
+            if (PlayerPrefs.GetString("Eye") == "Left")
+                eyeNum = 1;
+            else if (PlayerPrefs.GetString("Eye") == "Right")
+                eyeNum = 2;
+            else if (PlayerPrefs.GetString("Eye") == "Both")
+                eyeNum = 3;
+            else if (PlayerPrefs.GetString("Eye") == "Manual")
                 manualBlink = true;
-            }
+            else
+                eyeNum = 0;
+
+
+
+
         }
 
         void Update()
@@ -58,25 +70,33 @@ namespace OpenCvSharp.Demo
             else
             {
                 //grabs the average values from the FaceProcessor and localises them to this script 
-                currentLeftArea = faceDect.EyeArea(6);
-                currentRightArea = faceDect.EyeArea(5);
-
-
-                //print(currentLeftArea + " " + currentRightArea);
-
-                if (faceDect.faceInCam())
+                if (eyeNum == 3)
                 {
-
-
-                    if (currentLeftArea < finalLeft && currentRightArea < finalRight && blinked == false)
+                    currentLeftArea = faceDect.EyeArea(6);
+                    currentRightArea = faceDect.EyeArea(5);
+                    if (faceDect.faceInCam() && currentLeftArea < finalLeft && currentRightArea < finalRight && blinked == false)
                     {
-                        StartCoroutine(cleanEye());
+                        StartCoroutine(cleanEyes());
+                    }
+                }
+                else if (eyeNum == 2)
+                {
+                    currentRightArea = faceDect.EyeArea(5);
+                    if (faceDect.faceInCam() && currentRightArea < finalRight && blinked == false)
+                    {
+                        StartCoroutine(cleanRightEye());
 
                     }
-
-
                 }
+                else if (eyeNum == 1)
+                {
+                    currentLeftArea = faceDect.EyeArea(6);
+                    if (faceDect.faceInCam() && currentLeftArea < finalLeft && blinked == false)
+                    {
+                        StartCoroutine(cleanLeftEye());
 
+                    }
+                }
 
             }
         }
@@ -84,9 +104,45 @@ namespace OpenCvSharp.Demo
 
             
 
-        IEnumerator cleanEye()
+        IEnumerator cleanLeftEye()
         {
-            print("called");
+            print("called left eye");
+            blinked = true;
+
+            float t = 0f;
+
+            while (currentLeftArea < finalLeft)
+            {
+                t += Time.deltaTime;
+                if (t > blinkDura)
+                {
+                    Debug.Log("BREAK - no blink" + currentLeftArea + " " + finalLeft);
+
+                    blinked = false;
+                    yield break;
+
+                }
+                yield return null;
+
+            }
+
+
+            if (currentLeftArea > finalLeft)
+            {
+                Debug.Log("BLINKED" + currentLeftArea);
+                onBlink();
+            }
+
+            
+            yield return 0;
+            blinked = false;
+            yield break;
+
+        }
+
+        IEnumerator cleanEyes()
+        {
+            print("called both eyes");
             blinked = true;
 
             float t = 0f;
@@ -94,7 +150,6 @@ namespace OpenCvSharp.Demo
             while (currentLeftArea < finalLeft && currentRightArea < finalRight)
             {
                 t += Time.deltaTime;
-                print(t + " " + blinkDura + " " + currentLeftArea);
                 if (t > blinkDura)
                 {
                     Debug.Log("BREAK - no blink" + currentLeftArea + " " + finalLeft);
@@ -110,7 +165,44 @@ namespace OpenCvSharp.Demo
 
             if (currentLeftArea > finalLeft && currentRightArea > finalRight)
             {
-                Debug.Log("BLINKED" + currentLeftArea);
+                print("BLINKED" + currentLeftArea);
+                onBlink();
+            }
+
+            
+            yield return 0;
+            blinked = false;
+            yield break;
+
+        }
+
+        IEnumerator cleanRightEye()
+        {
+            print("called");
+            blinked = true;
+
+            float t = 0f;
+
+            while (currentRightArea < finalRight)
+            {
+                t += Time.deltaTime;
+                print(t + " " + blinkDura + " " + currentLeftArea);
+                if (t > blinkDura)
+                {
+                    print("BREAK - no blink" + currentRightArea + " " + finalRight);
+
+                    blinked = false;
+                    yield break;
+
+                }
+                yield return null;
+
+            }
+
+
+            if (currentRightArea > finalRight)
+            {
+                print("BLINKED" + currentRightArea);
                 onBlink();
             }
             //yield return new WaitForSeconds(0.2f);
@@ -119,10 +211,6 @@ namespace OpenCvSharp.Demo
             yield break;
 
         }
-
-
-
-
 
     }
 

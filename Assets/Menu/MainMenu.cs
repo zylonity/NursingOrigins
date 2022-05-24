@@ -8,15 +8,18 @@ public class MainMenu : MonoBehaviour
 
     public GameObject mainMenu;
     public GameObject settingsMenu;
+    public GameObject shortSettings;
     public GameObject creditsMenu;
     public GameObject CamOrManual;
     public GameObject warningMenu;
+    public GameObject accesibilityMenu;
+    
 
     public void PlayGame()
     {
-        PlayerPrefs.DeleteAll();
+        //PlayerPrefs.DeleteAll();
         mainMenu.SetActive(false);
-        CamOrManual.SetActive(true);
+        shortSettings.SetActive(true);
     }
     
     public void Settings()
@@ -60,9 +63,11 @@ public class MainMenu : MonoBehaviour
 
     public void Manual()
     {
-        PlayerPrefs.SetString("Mode", "Manual");
+        PlayerPrefs.SetString("Eye", "Manual");
         SceneManager.LoadScene(2);
     }
+
+
 
 
 }

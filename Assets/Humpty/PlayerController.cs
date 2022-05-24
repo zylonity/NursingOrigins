@@ -8,7 +8,9 @@ public class PlayerController : MonoBehaviour
     public CharacterController charPlayer;
 
     public float speed = 6.0f;
-    float mouseSens = 100f;
+
+    [HideInInspector]
+    public float mouseSens = 4f;
 
     bool firstFrame = false;
 
@@ -43,7 +45,7 @@ public class PlayerController : MonoBehaviour
 
         if (firstFrame == false)
         {
-            //Cursor.lockState = CursorLockMode.Locked;
+            Cursor.lockState = CursorLockMode.Locked;
             firstFrame = true;
         }
 
@@ -52,8 +54,8 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator onMouse()
     {
-        mouseX += (Input.GetAxis("Mouse X") * Time.unscaledDeltaTime) * mouseSens;
-        mouseY -= (Input.GetAxis("Mouse Y") * Time.unscaledDeltaTime) * mouseSens;
+        mouseX += (Input.GetAxis("Mouse X")) * mouseSens;
+        mouseY -= (Input.GetAxis("Mouse Y")) * mouseSens;
 
         mouseY = Mathf.Clamp(mouseY, -90f, 90f);
 
