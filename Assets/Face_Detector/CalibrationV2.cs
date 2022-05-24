@@ -45,7 +45,9 @@ namespace OpenCvSharp.Demo
         
         public float currentLeftArea, currentRightArea;
 
-        float blinkDura = 0.4f;
+        float blinkDura = 0.15f;
+        float threshholdMultiplier = 1.2f;
+
         int leftHalfPointer, rightHalfPointer;
         float finalLeft, finalRight;
 
@@ -136,6 +138,13 @@ namespace OpenCvSharp.Demo
                     {
                         StartCoroutine(cleanEyes());
                     }
+
+                    if (lastBlinkClosed && currentLeftArea > finalLeft * threshholdMultiplier && currentRightArea > finalRight * threshholdMultiplier)
+                    {
+                        lastBlinkClosed = false;
+                        print("Last blink over");
+                    }
+
                 }
                 else if (eyeNum == 2)
                 {
@@ -144,6 +153,13 @@ namespace OpenCvSharp.Demo
                         StartCoroutine(cleanRightEye());
 
                     }
+
+                    if (lastBlinkClosed && currentLeftArea > finalLeft * threshholdMultiplier)
+                    {
+                        lastBlinkClosed = false;
+                        print("Last blink over");
+                    }                    
+
 
                 }
                 else if (eyeNum == 1)
@@ -155,7 +171,7 @@ namespace OpenCvSharp.Demo
                     }
 
 
-                    if (lastBlinkClosed && currentLeftArea > finalLeft * 1.1f)
+                    if (lastBlinkClosed && currentLeftArea > finalLeft * threshholdMultiplier)
                     {
                         lastBlinkClosed = false;
                         print("Last blink over");
@@ -180,29 +196,7 @@ namespace OpenCvSharp.Demo
                     tempLeft.Add(currentLeftArea);
                     tempRight.Add(currentRightArea);
 
-                    if (counter < 3)
-                    {
-                        pointers[0].SetActive(true);
-                        timerScroll.value = counter / 3 * 100;
-                    }
-                    else if (counter > 3 && counter < 6)
-                    {
-                        pointers[0].SetActive(false);
-                        pointers[1].SetActive(true);
-                        timerScroll.value = ((counter - 3) / 3) * 100;
-                    }
-                    else if (counter > 6 && counter < 9)
-                    {
-                        pointers[1].SetActive(false);
-                        pointers[2].SetActive(true);
-                        timerScroll.value = ((counter - 6) / 3) * 100;
-                    }
-                    else if (counter > 9 && counter < 12)
-                    {
-                        pointers[2].SetActive(false);
-                        pointers[3].SetActive(true);
-                        timerScroll.value = ((counter - 9) / 3) * 100;
-                    }
+                    timerScroll.value = (counter / time) * 100;
                 }
                 else
                 {
@@ -274,32 +268,20 @@ namespace OpenCvSharp.Demo
             print("called both eyes");
             blinked = true;
 
-            float t = 0f;
-
-            while (currentLeftArea < finalLeft && currentRightArea < finalRight)
-            {
-                t += Time.deltaTime;
-                if (t > blinkDura)
-                {
-                    Debug.Log("BREAK - no blink" + currentLeftArea + " " + finalLeft);
-
-                    blinked = false;
-                    yield break;
-
-                }
-                yield return null;
-
-            }
-
+            yield return new WaitForSeconds(blinkDura);
 
             if (currentLeftArea > finalLeft && currentRightArea > finalRight)
             {
-                print("BLINKED" + currentLeftArea);
+                print("BLINKED" + currentLeftArea + " " + currentRightArea);
                 sixBlinksIndex++;
             }
+            else
+            {
+                Debug.Log("BREAK - no blink" + currentLeftArea + " threshhold: " + finalLeft + "  " + currentRightArea + " threshhold: " + finalRight);
+                lastBlinkClosed = true;
+            }
 
-            
-            yield return 0;
+
             blinked = false;
             yield break;
 
@@ -310,32 +292,20 @@ namespace OpenCvSharp.Demo
             print("called right eye");
             blinked = true;
 
-            float t = 0f;
-
-            while (currentRightArea < finalRight)
-            {
-                t += Time.deltaTime;
-                print(t + " " + blinkDura + " " + currentLeftArea);
-                if (t > blinkDura)
-                {
-                    print("BREAK - no blink" + currentRightArea + " " + finalRight);
-
-                    blinked = false;
-                    yield break;
-
-                }
-                yield return null;
-
-            }
-
+            yield return new WaitForSeconds(blinkDura);
 
             if (currentRightArea > finalRight)
             {
                 print("BLINKED" + currentRightArea);
                 sixBlinksIndex++;
             }
-            //yield return new WaitForSeconds(0.2f);
-            yield return 0;
+            else
+            {
+                Debug.Log("BREAK - no blink" + currentRightArea + " threshhold: " + finalRight);
+                lastBlinkClosed = true;
+            }
+
+
             blinked = false;
             yield break;
 
@@ -347,7 +317,7 @@ namespace OpenCvSharp.Demo
             stage0h.SetActive(false);
             stage1.SetActive(true);
             counter = 0;
-            time = 12;
+            time = 5;
             startCalibBool = true;
 
 
@@ -374,6 +344,7 @@ namespace OpenCvSharp.Demo
         {
             leftHalfPointer -= 1;
             blinkDura += 0.05f;
+            threshholdMultiplier -= 0.05f;
 
             sixBlinksIndex = -1;
             stage3.SetActive(false);
@@ -384,6 +355,7 @@ namespace OpenCvSharp.Demo
         {
             leftHalfPointer -= 3;
             blinkDura += 0.1f;
+            threshholdMultiplier -= 0.1f;
 
             sixBlinksIndex = -1;
             stage3.SetActive(false);
@@ -393,6 +365,7 @@ namespace OpenCvSharp.Demo
         public void ExtraBlinks()
         {
             leftHalfPointer += 1;
+            threshholdMultiplier += 0.05f;
 
             sixBlinksIndex = -1;
             stage3.SetActive(false);
@@ -402,6 +375,7 @@ namespace OpenCvSharp.Demo
         public void ExtraBlinksPlus()
         {
             leftHalfPointer += 3;
+            threshholdMultiplier += 0.1f;
 
             sixBlinksIndex = -1;
             stage3.SetActive(false);
