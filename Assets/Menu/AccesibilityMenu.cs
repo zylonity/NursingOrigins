@@ -9,7 +9,9 @@ public class AccesibilityMenu : MonoBehaviour
     public Button left;
     public Button right;
     public Button both;
-    
+
+    public Button subLeft;
+    public Button subRight;
 
     public void LeftEye()
     {
@@ -37,5 +39,19 @@ public class AccesibilityMenu : MonoBehaviour
 
     }
     
+    public void SubsOn()
+    {
+        PlayerPrefs.SetString("Subtitles", "On");
+        subLeft.interactable = false;
+        subRight.interactable = true;
+    }
+
+    public void SubsOff()
+    {
+        PlayerPrefs.SetString("Subtitles", "Off");
+        subLeft.interactable = true;
+        subRight.interactable = false;
+    }
+
 
 }

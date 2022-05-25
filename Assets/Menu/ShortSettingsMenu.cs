@@ -38,9 +38,13 @@ public class ShortSettingsMenu : MonoBehaviour
         {
             PlayerPrefs.SetString("Eye", "Both");
         }
+        if (!PlayerPrefs.HasKey("Subtitles"))
+        {
+            PlayerPrefs.SetString("Subtitles", "Off");
 
+        }
     }
-    
+
     public void ChangeMouse()
     {
         PlayerPrefs.SetFloat("MouseSens", mouseSens.value);

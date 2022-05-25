@@ -15933,6 +15933,8 @@ MonoBehaviour:
   left: {fileID: 2059170493}
   right: {fileID: 84390446}
   both: {fileID: 1746517559}
+  subLeft: {fileID: 1228423630}
+  subRight: {fileID: 1800757495}
 --- !u!1 &1161965013
 GameObject:
   m_ObjectHideFlags: 0
@@ -16717,9 +16719,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1157420162}
-        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
-        m_MethodName: Exit
+      - m_Target: {fileID: 1157420165}
+        m_TargetAssemblyTypeName: AccesibilityMenu, Assembly-CSharp
+        m_MethodName: SubsOn
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -22610,9 +22612,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1157420162}
-        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
-        m_MethodName: Exit
+      - m_Target: {fileID: 1157420165}
+        m_TargetAssemblyTypeName: AccesibilityMenu, Assembly-CSharp
+        m_MethodName: SubsOff
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

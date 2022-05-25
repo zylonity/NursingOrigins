@@ -15,20 +15,61 @@ public class GameStartAnim : MonoBehaviour
     public GameObject pusher;
     public AudioClip song;
 
+    public GameObject sub1, sub2, sub3, sub4;
+
     public Rigidbody wall1, wall2, wall3, wall4;
 
     public AudioSource camMic;
 
     public bool breakWalls = false;
 
+    private bool subTitles;
+
+
     private void Start()
     {
+        if (PlayerPrefs.GetString("Subtitles") == "On")
+            subTitles = true;
+        else if (PlayerPrefs.GetString("Subtitles") == "Off")
+            subTitles = false;
+
         camMic.clip = song;
         camMic.Play();
     }
 
     void Update()
     {
+
+        if (subTitles && camMic.isPlaying)
+        {
+            if (camMic.time < 2.6f)
+            {
+                sub1.SetActive(true);
+            }
+            else if (camMic.time < 5.6f)
+            {
+                sub1.SetActive(false);
+                sub2.SetActive(true);
+            }
+            else if (camMic.time < 8.7f)
+            {
+                sub2.SetActive(false);
+                sub3.SetActive(true);
+            }
+            else if (camMic.time < 13.8f)
+            {
+                sub3.SetActive(false);
+                sub4.SetActive(true);
+            }
+            else
+            {
+                sub4.SetActive(false);
+            }
+
+
+        }
+
+
         if (!camMic.isPlaying)
         {
             wall1.isKinematic = false;

@@ -26,6 +26,8 @@ namespace OpenCvSharp.Demo
         bool sceneReady = false;
 
         public AudioSource audioSource;
+        public AudioSource crowd;
+
         public PostProcessVolume camVol;
 
         Vignette vig;
@@ -96,6 +98,13 @@ namespace OpenCvSharp.Demo
 
         public bool gameStart = false;
         bool firstRun = false;
+        private bool subTitles;
+
+        public GameObject sub1;
+        public GameObject sub2;
+        public GameObject sub3;
+        public GameObject sub4;
+        public GameObject sub5;
 
         float ogInt;
         Color ogCol;
@@ -106,7 +115,10 @@ namespace OpenCvSharp.Demo
         {
             BlinkDect.onBlink += bBlinked;
 
-
+            if (PlayerPrefs.GetString("Subtitles") == "On")
+                subTitles = true;
+            else if (PlayerPrefs.GetString("Subtitles") == "Off")
+                subTitles = false;
 
             camVol.profile.TryGetSettings(out vig);
             camVol.profile.TryGetSettings(out cA);
@@ -133,6 +145,9 @@ namespace OpenCvSharp.Demo
             {
                 if (!firstRun)
                 {
+                    webcamHandler.GetComponent<GameStartAnim>().enabled = false;
+                    if (subTitles)
+                        sub1.SetActive(true);
                     audioSource.clip = audOne;
                     audioSource.Play();
                     firstRun = true;
@@ -161,6 +176,11 @@ namespace OpenCvSharp.Demo
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS1, counter / Stage1Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS1, counter / Stage1Time);
                     cG.colorFilter.Interp(ogCol, colorShiftS1, counter / Stage1Time);
+
+                    if (!audioSource.isPlaying && subTitles)
+                    {
+                        sub1.SetActive(false);
+                    }
 
 
                 }
@@ -199,6 +219,12 @@ namespace OpenCvSharp.Demo
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
                     cG.colorFilter.Interp(ogCol, colorShiftS2, counter / Stage2Time);
 
+                    if (!audioSource.isPlaying && subTitles)
+                    {
+                        sub2.SetActive(false);
+                    }
+
+
                 }
                 else
                 {
@@ -232,9 +258,15 @@ namespace OpenCvSharp.Demo
                     cG.colorFilter.Interp(ogCol, colorShiftS3, counter / Stage3Time);
 
 
+
                 }
                 else
                 {
+                    if (!audioSource.isPlaying && subTitles)
+                    {
+                        sub3.SetActive(false);
+                    }
+
                     tCounter = maxSlow;
                     blinkCanvasS31.SetActive(true);
                     blinkCanvasS32.SetActive(true);
@@ -272,9 +304,15 @@ namespace OpenCvSharp.Demo
                     cG.colorFilter.Interp(ogCol, colorShiftS4, counter / Stage4Time);
 
 
+
                 }
                 else
                 {
+
+                    if (!S4audioSource.isPlaying && subTitles)
+                    {
+                        sub4.SetActive(false);
+                    }
                     tCounter = maxSlow;
                     sceneReady = true;
                     blink.SetTrigger("Blink");
@@ -308,6 +346,11 @@ namespace OpenCvSharp.Demo
                 }
                 else
                 {
+                    if (!S5audioSource.isPlaying && subTitles)
+                    {
+                        sub4.SetActive(false);
+                    }
+
                     tCounter = maxSlow;
                     sceneReady = true;
                     blink.SetTrigger("Blink");
@@ -328,19 +371,19 @@ namespace OpenCvSharp.Demo
             if (sceneReady && lookingAtColl)
             {
                 if (stage == 1)
-                    Stage1End();
+                    StartCoroutine(Stage1End());
                 else if (stage == 2)
-                    Stage2End();
+                    StartCoroutine(Stage2End());
                 else if (stage == 3)
                 {
                     if (lookingAt == "S3PointerDEAD")
                     {
-                        Stage3DEAD();
+                        StartCoroutine(Stage3DEAD());
                         print("dead");
                     }
                     else if (lookingAt == "S3PointerALIVE")
                     {
-                        Stage3ALIVE();
+                        StartCoroutine(Stage3ALIVE());
                         print("Alive");
                     }
 
@@ -353,31 +396,43 @@ namespace OpenCvSharp.Demo
 
         }
 
-        void Stage1End()
+        IEnumerator Stage1End()
         {
+            blink.SetTrigger("ShortBlink");
+            yield return new WaitForSecondsRealtime(0.385f);
             Stage1.SetActive(false);
             faceDect.processingC = false;
             lookingAtColl = false;
+            sceneReady = false;
             Stage2.SetActive(true);
+            yield return new WaitForSecondsRealtime(0.75f);
             audioSource.clip = audTwo;
             audioSource.Play();
-            sceneReady = false;
+            if (subTitles)
+                sub2.SetActive(true);
             stage = 2;
             counter = 0;
             tempMouse = mouseSens;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
+            yield break;
         }
 
-        void Stage2End()
+        IEnumerator Stage2End()
         {
+            blink.SetTrigger("ShortBlink");
+            yield return new WaitForSecondsRealtime(0.385f);
             Stage2.SetActive(false);
             faceDect.processingC = false;
             lookingAtColl = false;
             Stage3.SetActive(true);
+            sceneReady = false;
+
+            yield return new WaitForSecondsRealtime(0.75f);
             audioSource.clip = audThree;
             audioSource.Play();
-            sceneReady = false;
+            if (subTitles)
+                sub3.SetActive(true);
             stage = 3;
             counter = 0;
             tempMouse = mouseSens;
@@ -385,19 +440,29 @@ namespace OpenCvSharp.Demo
             maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
+            yield break;
         }
 
-        void Stage3DEAD()
+        IEnumerator Stage3DEAD()
         {
+            blink.SetTrigger("ShortBlink");
+            yield return new WaitForSecondsRealtime(0.382f);
             Stage3.SetActive(false);
             faceDect.processingC = false;
             lookingAtColl = false;
             Stage4.SetActive(true);
             player.SetActive(false);
             pControl = S4Player.GetComponentInChildren<PlayerController>();
+            sceneReady = false;
+
+            yield return new WaitForSecondsRealtime(0.75f);
             S4audioSource.clip = audFour;
             S4audioSource.Play();
-            sceneReady = false;
+            if (subTitles)
+            {
+                sub4.SetActive(true);
+                sub5.SetActive(true);
+            }
             stage = 4;
             counter = 0;
             tempMouse = mouseSens;
@@ -405,19 +470,29 @@ namespace OpenCvSharp.Demo
             maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
+            yield break;
         }
 
-        void Stage3ALIVE()
+        IEnumerator Stage3ALIVE()
         {
+            blink.SetTrigger("ShortBlink");
+            yield return new WaitForSecondsRealtime(0.382f);
             Stage3.SetActive(false);
             faceDect.processingC = false;
             lookingAtColl = false;
             Stage5.SetActive(true);
             player.SetActive(false);
             pControl = S5Player.GetComponentInChildren<PlayerController>();
+            sceneReady = false;
+
+            yield return new WaitForSecondsRealtime(0.75f);
             S5audioSource.clip = audFour;
             S5audioSource.Play();
-            sceneReady = false;
+            if (subTitles)
+            {
+                sub4.SetActive(true);
+                sub5.SetActive(true);
+            }
             stage = 5;
             counter = 0;
             tempMouse = mouseSens;
@@ -425,6 +500,7 @@ namespace OpenCvSharp.Demo
             maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
+            yield break;
         }
 
         IEnumerator HumptyEnd()
