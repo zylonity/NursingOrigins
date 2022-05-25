@@ -3,6 +3,7 @@ namespace OpenCvSharp.Demo
     using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
+    using UnityEngine.SceneManagement;
     using UnityEngine.Rendering.PostProcessing;
 
 
@@ -13,10 +14,12 @@ namespace OpenCvSharp.Demo
         public bool lookingAtColl = false;
 
         [HideInInspector]
-        public bool lookingAtEnding1, lookingAtEnding2 = false;
+        public string lookingAt = null;
 
+        public Animator blink;
         public GameObject webcamHandler;
 
+        public GameObject player;
         public PlayerController pControl;
         float mouseSens;
 
@@ -64,6 +67,8 @@ namespace OpenCvSharp.Demo
         [Space(10)]
         [Header(" --- Stage 4")]
         public GameObject Stage4;
+        public GameObject S4Player;
+        public AudioSource S4audioSource;
         public AudioClip audFour;
         public float Stage4Time;
         public float maxVigAndCaIncS4;
@@ -73,7 +78,8 @@ namespace OpenCvSharp.Demo
         [Space(10)]
         [Header(" --- Stage 5")]
         public GameObject Stage5;
-        public AudioClip audFive;
+        public GameObject S5Player;
+        public AudioSource S5audioSource;
         public float Stage5Time;
         public float maxVigAndCaIncS5;
         [ColorUsageAttribute(false, true)]
@@ -85,8 +91,16 @@ namespace OpenCvSharp.Demo
         float tCounter = 1;
         float maxSlow = 0.2f;
 
+        float tempMouse;
+        float maxMouseMultiplier = 0.05f;
+
+        public bool gameStart = false;
+        bool firstRun = false;
+
         float ogInt;
         Color ogCol;
+
+        FaceDetectorScene faceDect;
 
         void OnEnable()
         {
@@ -99,33 +113,48 @@ namespace OpenCvSharp.Demo
             camVol.profile.TryGetSettings(out cG);
             ogInt = cA.intensity.value;
             ogCol = cG.colorFilter.value;
+
+            faceDect = webcamHandler.GetComponentInChildren<FaceDetectorScene>();
+
+
         }
 
         private void Start()
         {
             mouseSens = pControl.mouseSens;
+            tempMouse = mouseSens;
             stage = 1;
         }
 
         private void Update()
         {
 
-            if (stage == 1)
+            if (stage == 1 && gameStart)
             {
+                if (!firstRun)
+                {
+                    audioSource.clip = audOne;
+                    audioSource.Play();
+                    firstRun = true;
+                }
+
                 counter += Time.unscaledDeltaTime;
                 Time.timeScale = tCounter;
+                pControl.mouseSens = tempMouse;
                 if (counter < Stage1Time)
                 {
 
                     if (tCounter > maxSlow)
                     {
                         tCounter -= (counter / Stage1Time) / 100f;
-                        pControl.mouseSens -= (mouseSens/ Stage1Time) / 100f;
                     }
                     else
                         tCounter = maxSlow;
 
-
+                    if (pControl.mouseSens > mouseSens * maxMouseMultiplier)
+                    {
+                        tempMouse -= (mouseSens / Stage1Time) / 100f;
+                    }
 
 
 
@@ -139,7 +168,7 @@ namespace OpenCvSharp.Demo
                 {
                     tCounter = maxSlow;
                     blinkCanvasS11.SetActive(true);
-                    webcamHandler.SetActive(true);
+                    faceDect.processingC = true;
                     sceneReady = true;
                 }
             }
@@ -147,7 +176,7 @@ namespace OpenCvSharp.Demo
             {
                 counter += Time.unscaledDeltaTime;
                 Time.timeScale = tCounter;
-
+                pControl.mouseSens = tempMouse;
                 if (counter < Stage2Time)
                 {
                     ballS21.FireAndBreak();
@@ -157,12 +186,14 @@ namespace OpenCvSharp.Demo
                     if (tCounter > maxSlow)
                     {
                         tCounter -= (counter / Stage2Time) / 100f;
-                        pControl.mouseSens -= (mouseSens / Stage2Time) / 100f;
                     }
                     else
                         tCounter = maxSlow;
 
-                    pControl.mouseSens = mouseSens * (1 - (counter / Stage1Time));
+                    if (pControl.mouseSens > mouseSens * maxMouseMultiplier)
+                    {
+                        tempMouse -= (mouseSens / Stage1Time) / 100f;
+                    }
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS2, counter / Stage2Time);
@@ -172,7 +203,7 @@ namespace OpenCvSharp.Demo
                 else
                 {
                     blinkCanvasS21.SetActive(true);
-                    webcamHandler.SetActive(true);
+                    faceDect.processingC = true;
                     sceneReady = true;
                 }
             }
@@ -180,18 +211,21 @@ namespace OpenCvSharp.Demo
             {
                 counter += Time.unscaledDeltaTime;
                 Time.timeScale = tCounter;
+                pControl.mouseSens = tempMouse;
                 if (counter < Stage3Time)
                 {
 
                     if (tCounter > maxSlow)
                     {
                         tCounter -= (counter / Stage3Time) / 100f;
-                        pControl.mouseSens -= (mouseSens / Stage3Time) / 100f;
                     }
                     else
                         tCounter = maxSlow;
 
-                    pControl.mouseSens = mouseSens * (1 - (counter / Stage1Time));
+                    if (pControl.mouseSens > mouseSens * maxMouseMultiplier)
+                    {
+                        tempMouse -= (mouseSens / Stage1Time) / 100f;
+                    }
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS3, counter / Stage3Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS3, counter / Stage3Time);
@@ -203,27 +237,35 @@ namespace OpenCvSharp.Demo
                 {
                     tCounter = maxSlow;
                     blinkCanvasS31.SetActive(true);
-                    webcamHandler.SetActive(true);
-                    //blinkCanvasS32.SetActive(true);
+                    blinkCanvasS32.SetActive(true);
+                    faceDect.processingC = true;
                     sceneReady = true;
                 }
+
+
+
+
+
             }
             else if (stage == 4)
             {
                 counter += Time.unscaledDeltaTime;
                 Time.timeScale = tCounter;
+                pControl.mouseSens = tempMouse;
                 if (counter < Stage4Time)
                 {
 
                     if (tCounter > maxSlow)
                     {
                         tCounter -= (counter / Stage4Time) / 100f;
-                        pControl.mouseSens -= (mouseSens / Stage4Time) / 100f;
                     }
                     else
                         tCounter = maxSlow;
 
-                    pControl.mouseSens = mouseSens * (1 - (counter / Stage1Time));
+                    if (pControl.mouseSens > mouseSens * maxMouseMultiplier)
+                    {
+                        tempMouse -= (mouseSens / Stage4Time) / 100f;
+                    }
 
                     vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS4, counter / Stage4Time);
                     cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS4, counter / Stage4Time);
@@ -235,23 +277,31 @@ namespace OpenCvSharp.Demo
                 {
                     tCounter = maxSlow;
                     sceneReady = true;
+                    blink.SetTrigger("Blink");
+                    StartCoroutine(HumptyEnd());
                 }
             }
             else if (stage == 5)
             {
                 counter += Time.unscaledDeltaTime;
                 Time.timeScale = tCounter;
-                if (counter < Stage4Time)
+                pControl.mouseSens = tempMouse;
+                if (counter < Stage5Time)
                 {
 
                     if (tCounter > maxSlow)
-                        tCounter -= (counter / Stage1Time) / 100f;
+                        tCounter -= (counter / Stage5Time) / 100f;
                     else
                         tCounter = maxSlow;
 
+                    if (pControl.mouseSens > mouseSens * maxMouseMultiplier)
+                    {
+                        tempMouse -= (mouseSens / Stage5Time) / 100f;
+                    }
 
-                    vig.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS5, counter / Stage5Time);
-                    cA.intensity.Interp(ogInt, ogInt + maxVigAndCaIncS5, counter / Stage5Time);
+
+                    vig.intensity.Interp(ogInt, maxVigAndCaIncS5, counter / Stage5Time);
+                    cA.intensity.Interp(ogInt, maxVigAndCaIncS5, counter / Stage5Time);
                     cG.colorFilter.Interp(ogCol, colorShiftS5, counter / Stage5Time);
 
 
@@ -260,6 +310,8 @@ namespace OpenCvSharp.Demo
                 {
                     tCounter = maxSlow;
                     sceneReady = true;
+                    blink.SetTrigger("Blink");
+                    StartCoroutine(HumptyEnd());
                 }
             }
         }
@@ -280,7 +332,20 @@ namespace OpenCvSharp.Demo
                 else if (stage == 2)
                     Stage2End();
                 else if (stage == 3)
-                    Stage3End();
+                {
+                    if (lookingAt == "S3PointerDEAD")
+                    {
+                        Stage3DEAD();
+                        print("dead");
+                    }
+                    else if (lookingAt == "S3PointerALIVE")
+                    {
+                        Stage3ALIVE();
+                        print("Alive");
+                    }
+
+                }
+
 
             }
 
@@ -291,7 +356,7 @@ namespace OpenCvSharp.Demo
         void Stage1End()
         {
             Stage1.SetActive(false);
-            webcamHandler.SetActive(false);
+            faceDect.processingC = false;
             lookingAtColl = false;
             Stage2.SetActive(true);
             audioSource.clip = audTwo;
@@ -299,6 +364,7 @@ namespace OpenCvSharp.Demo
             sceneReady = false;
             stage = 2;
             counter = 0;
+            tempMouse = mouseSens;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
         }
@@ -306,7 +372,7 @@ namespace OpenCvSharp.Demo
         void Stage2End()
         {
             Stage2.SetActive(false);
-            webcamHandler.SetActive(false);
+            faceDect.processingC = false;
             lookingAtColl = false;
             Stage3.SetActive(true);
             audioSource.clip = audThree;
@@ -314,46 +380,58 @@ namespace OpenCvSharp.Demo
             sceneReady = false;
             stage = 3;
             counter = 0;
+            tempMouse = mouseSens;
             tCounter = 0.8f;
             maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
         }
 
-        void Stage3End()
+        void Stage3DEAD()
         {
             Stage3.SetActive(false);
-            webcamHandler.SetActive(false);
+            faceDect.processingC = false;
             lookingAtColl = false;
             Stage4.SetActive(true);
-            audioSource.clip = audFour;
-            audioSource.Play();
+            player.SetActive(false);
+            pControl = S4Player.GetComponentInChildren<PlayerController>();
+            S4audioSource.clip = audFour;
+            S4audioSource.Play();
             sceneReady = false;
             stage = 4;
             counter = 0;
+            tempMouse = mouseSens;
             tCounter = 1;
             maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
         }
 
-        void Stage4End()
+        void Stage3ALIVE()
         {
-            Stage4.SetActive(false);
-            webcamHandler.SetActive(false);
+            Stage3.SetActive(false);
+            faceDect.processingC = false;
             lookingAtColl = false;
             Stage5.SetActive(true);
-            audioSource.clip = audFour;
-            audioSource.Play();
+            player.SetActive(false);
+            pControl = S5Player.GetComponentInChildren<PlayerController>();
+            S5audioSource.clip = audFour;
+            S5audioSource.Play();
             sceneReady = false;
             stage = 5;
             counter = 0;
-            tCounter = 0.8f;
+            tempMouse = mouseSens;
+            tCounter = 1;
             maxSlow = 0.2f;
             ogInt = cA.intensity;
             ogCol = cG.colorFilter;
+        }
 
-
+        IEnumerator HumptyEnd()
+        {
+            yield return new WaitForSeconds(2);
+            SceneManager.LoadScene(4);
+            yield break;
 
         }
     }

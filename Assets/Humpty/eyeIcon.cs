@@ -6,51 +6,43 @@ public class eyeIcon : MonoBehaviour
 {
     public OpenCvSharp.Demo.IfBlinked blinkDealer;
 
-    public int endingNum = 0;
 
-    public LayerMask mask;
+    LayerMask blinkingIcons;
     public GameObject playerHead;
     Camera cam;
     RaycastHit hit;
+
+    public string nameCol = null;
+
     private void Start()
     {
 
         cam = playerHead.GetComponent<Camera>();
+
     }
 
-    // Update is called once per frame
+    
+
+
     void Update()
     {
         //print(onObj);
         transform.LookAt(playerHead.transform.position);
 
+        blinkingIcons = LayerMask.GetMask("BlinkingIcon");
+
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, mask))
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, blinkingIcons))
         {
-            if (hit.transform.name == transform.name)
-            {
-                blinkDealer.lookingAtColl = true;
-                
-                if (endingNum == 0)
-                    blinkDealer.lookingAtColl = true;
-                else if (endingNum == 1)
-                    blinkDealer.lookingAtEnding1 = true;
-                else if (endingNum == 2)
-                    blinkDealer.lookingAtEnding2 = true;
-
-            }
-            else
-            {
-                blinkDealer.lookingAtColl = false;
-
-                if (endingNum == 0)
-                    blinkDealer.lookingAtColl = false;
-                else if (endingNum == 1)
-                    blinkDealer.lookingAtEnding1 = false;
-                else if (endingNum == 2)
-                    blinkDealer.lookingAtEnding2 = false;
-            }
+            blinkDealer.lookingAtColl = true;
+            blinkDealer.lookingAt = hit.transform.name;
+        }
+        else
+        {
+            blinkDealer.lookingAtColl = false;
+            nameCol = null;
+            blinkDealer.lookingAt = null;
         }
 
     }

@@ -14,4 +14,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Humpty/Stage1.unity
     guid: c99d6acbb83f06a41bf34d397ca0bd2c
+  - enabled: 1
+    path: Assets/HowTo/Tutorial.unity
+    guid: a2e9df72bc22c6c49924caf391ceaeea
+  - enabled: 1
+    path: Assets/Humpty/GameEnd.unity
+    guid: 75de578efb05c4e45b7aa6181ee8c938
   m_configObjects: {}

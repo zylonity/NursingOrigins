@@ -23,11 +23,13 @@ namespace OpenCvSharp.Demo
 
         public FaceDetectorScene faceDect;
         bool blinked = false;
-    
+        bool lastBlinkClosed;
+
         public float currentLeftArea, currentRightArea;
 
         float finalLeft, finalRight;
         float blinkDura;
+        float threshholdMultiplier;
 
         int eyeNum;
 
@@ -38,6 +40,8 @@ namespace OpenCvSharp.Demo
             finalLeft = PlayerPrefs.GetFloat("FinalLeft");
             finalRight = PlayerPrefs.GetFloat("FinalRight");
             blinkDura = PlayerPrefs.GetFloat("BlinkDura");
+            threshholdMultiplier = PlayerPrefs.GetFloat("OpenEye");
+
 
             if (PlayerPrefs.GetString("Eye") == "Left")
                 eyeNum = 1;
@@ -57,8 +61,19 @@ namespace OpenCvSharp.Demo
 
         void Update()
         {
-
-
+            if (eyeNum == 3)
+            {
+                currentLeftArea = faceDect.EyeArea(6);
+                currentRightArea = faceDect.EyeArea(5);
+            }
+            else if (eyeNum == 2)
+            {
+                currentRightArea = faceDect.EyeArea(5);
+            }
+            else if (eyeNum == 1)
+            {
+                currentLeftArea = faceDect.EyeArea(6);
+            }
 
             if (manualBlink == true)
             {
@@ -69,62 +84,74 @@ namespace OpenCvSharp.Demo
             }
             else
             {
-                //grabs the average values from the FaceProcessor and localises them to this script 
-                if (eyeNum == 3)
+
+                if (faceDect.faceInCam() && faceDect.processingC)
                 {
-                    currentLeftArea = faceDect.EyeArea(6);
-                    currentRightArea = faceDect.EyeArea(5);
-                    if (faceDect.faceInCam() && currentLeftArea < finalLeft && currentRightArea < finalRight && blinked == false)
+
+                    print(currentLeftArea + currentRightArea);
+                    //grabs the average values from the FaceProcessor and localises them to this script 
+                    if (eyeNum == 3)
                     {
-                        StartCoroutine(cleanEyes());
+                        if (currentLeftArea < finalLeft && currentRightArea < finalRight && blinked == false && lastBlinkClosed == false)
+                        {
+                            StartCoroutine(cleanEyes());
+                        }
+
+                        if (lastBlinkClosed && currentLeftArea > finalLeft * threshholdMultiplier && currentRightArea > finalRight * threshholdMultiplier)
+                        {
+                            lastBlinkClosed = false;
+                            print("Last blink over");
+                        }
+
                     }
-                }
-                else if (eyeNum == 2)
-                {
-                    currentRightArea = faceDect.EyeArea(5);
-                    if (faceDect.faceInCam() && currentRightArea < finalRight && blinked == false)
+                    else if (eyeNum == 2)
                     {
-                        StartCoroutine(cleanRightEye());
+                        if (currentRightArea < finalRight && blinked == false && lastBlinkClosed == false)
+                        {
+                            StartCoroutine(cleanRightEye());
+
+                        }
+
+                        if (lastBlinkClosed && currentLeftArea > finalLeft * threshholdMultiplier)
+                        {
+                            lastBlinkClosed = false;
+                            print("Last blink over");
+                        }
+
+
+                    }
+                    else if (eyeNum == 1)
+                    {
+                        if (currentLeftArea < finalLeft && blinked == false && lastBlinkClosed == false)
+                        {
+                            StartCoroutine(cleanLeftEye());
+
+                        }
+
+
+                        if (lastBlinkClosed && currentLeftArea > finalLeft * threshholdMultiplier)
+                        {
+                            lastBlinkClosed = false;
+                            print("Last blink over");
+                        }
+
 
                     }
                 }
-                else if (eyeNum == 1)
-                {
-                    currentLeftArea = faceDect.EyeArea(6);
-                    if (faceDect.faceInCam() && currentLeftArea < finalLeft && blinked == false)
-                    {
-                        StartCoroutine(cleanLeftEye());
-
-                    }
-                }
+                
 
             }
         }
 
 
-            
 
         IEnumerator cleanLeftEye()
         {
             print("called left eye");
             blinked = true;
 
-            float t = 0f;
 
-            while (currentLeftArea < finalLeft)
-            {
-                t += Time.deltaTime;
-                if (t > blinkDura)
-                {
-                    Debug.Log("BREAK - no blink" + currentLeftArea + " " + finalLeft);
-
-                    blinked = false;
-                    yield break;
-
-                }
-                yield return null;
-
-            }
+            yield return new WaitForSeconds(blinkDura);
 
 
             if (currentLeftArea > finalLeft)
@@ -132,9 +159,13 @@ namespace OpenCvSharp.Demo
                 Debug.Log("BLINKED" + currentLeftArea);
                 onBlink();
             }
+            else
+            {
+                Debug.Log("BREAK - no blink" + currentLeftArea + " " + finalLeft);
+                lastBlinkClosed = true;
+            }
 
-            
-            yield return 0;
+
             blinked = false;
             yield break;
 
@@ -145,32 +176,20 @@ namespace OpenCvSharp.Demo
             print("called both eyes");
             blinked = true;
 
-            float t = 0f;
-
-            while (currentLeftArea < finalLeft && currentRightArea < finalRight)
-            {
-                t += Time.deltaTime;
-                if (t > blinkDura)
-                {
-                    Debug.Log("BREAK - no blink" + currentLeftArea + " " + finalLeft);
-
-                    blinked = false;
-                    yield break;
-
-                }
-                yield return null;
-
-            }
-
+            yield return new WaitForSeconds(blinkDura);
 
             if (currentLeftArea > finalLeft && currentRightArea > finalRight)
             {
-                print("BLINKED" + currentLeftArea);
+                print("BLINKED" + currentLeftArea + " " + currentRightArea);
                 onBlink();
             }
+            else
+            {
+                Debug.Log("BREAK - no blink" + currentLeftArea + " threshhold: " + finalLeft + "  " + currentRightArea + " threshhold: " + finalRight);
+                lastBlinkClosed = true;
+            }
 
-            
-            yield return 0;
+
             blinked = false;
             yield break;
 
@@ -178,39 +197,28 @@ namespace OpenCvSharp.Demo
 
         IEnumerator cleanRightEye()
         {
-            print("called");
+            print("called right eye");
             blinked = true;
 
-            float t = 0f;
-
-            while (currentRightArea < finalRight)
-            {
-                t += Time.deltaTime;
-                print(t + " " + blinkDura + " " + currentLeftArea);
-                if (t > blinkDura)
-                {
-                    print("BREAK - no blink" + currentRightArea + " " + finalRight);
-
-                    blinked = false;
-                    yield break;
-
-                }
-                yield return null;
-
-            }
-
+            yield return new WaitForSeconds(blinkDura);
 
             if (currentRightArea > finalRight)
             {
                 print("BLINKED" + currentRightArea);
                 onBlink();
             }
-            //yield return new WaitForSeconds(0.2f);
-            yield return 0;
+            else
+            {
+                Debug.Log("BREAK - no blink" + currentRightArea + " threshhold: " + finalRight);
+                lastBlinkClosed = true;
+            }
+
+
             blinked = false;
             yield break;
 
         }
+
 
     }
 

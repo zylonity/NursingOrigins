@@ -16,6 +16,7 @@
 		public TextAsset shapes;
 
 		public bool inGame = false;
+		public bool processingC = true;
 
 		private FaceProcessorLive<WebCamTexture> processor;
 
@@ -69,9 +70,12 @@
 		protected override bool ProcessTexture(WebCamTexture input, ref Texture2D output)
 		{
 
+			if (processingC)
+            {
+				// detect everything we're interested in
+				processor.ProcessTexture(input, TextureParameters);
+			}
 
-            // detect everything we're interested in
-            processor.ProcessTexture(input, TextureParameters);
 
             if (!inGame)
             {

@@ -31,17 +31,22 @@ public class PlayerController : MonoBehaviour
 
         StartCoroutine(onMouse());
 
-        float movementX = Input.GetAxis("Horizontal");
-        float movementZ = Input.GetAxis("Vertical");
 
-        Vector3 toMove = transform.right * movementX + transform.forward * movementZ;
+        if(charPlayer != null)
+        {
+            float movementX = Input.GetAxis("Horizontal");
+            float movementZ = Input.GetAxis("Vertical");
 
-        charPlayer.Move(toMove * speed * Time.deltaTime);
+            Vector3 toMove = transform.right * movementX + transform.forward * movementZ;
+
+            charPlayer.Move(toMove * speed * Time.deltaTime);
 
 
-        velocity.y += -9.81f * Time.deltaTime;
+            velocity.y += -9.81f * Time.deltaTime;
 
-        charPlayer.Move(velocity * Time.deltaTime);
+            charPlayer.Move(velocity * Time.deltaTime);
+        }
+
 
         if (firstFrame == false)
         {

@@ -407,8 +407,9 @@ namespace OpenCvSharp.Demo
             PlayerPrefs.SetFloat("FinalLeft", finalLeft);
             PlayerPrefs.SetFloat("FinalRight", finalRight);
             PlayerPrefs.SetFloat("BlinkDura", blinkDura);
+            PlayerPrefs.SetFloat("OpenEye", threshholdMultiplier);
             Destroy(camHandle);
-            SceneManager.LoadScene(2);
+            SceneManager.LoadScene(3);
         }
 
 

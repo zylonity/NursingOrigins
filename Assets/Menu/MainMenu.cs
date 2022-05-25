@@ -64,7 +64,7 @@ public class MainMenu : MonoBehaviour
     public void Manual()
     {
         PlayerPrefs.SetString("Eye", "Manual");
-        SceneManager.LoadScene(2);
+        SceneManager.LoadScene(3);
     }
 
 
